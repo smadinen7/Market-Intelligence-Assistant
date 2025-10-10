@@ -1,37 +1,48 @@
-# 🚀 Ascent AI
+# � CEO AI Assistant
 
-### Intelligent Branding for Your Career Ascent
+### AI-Powered Financial Intelligence Platform
 
-Ascent AI is a sophisticated, SaaS-style Streamlit application that acts as your personal AI co-pilot for career branding. It turns your professional experience and career aspirations into content that gets noticed, helping you share posts in your authentic voice, join the right discussions, and grow your influence as a thought leader on platforms like LinkedIn.
+CEO AI Assistant is a sophisticated Streamlit application that provides comprehensive financial analysis and intelligence through advanced AI agents. Designed for executives, investors, analysts, and financial professionals who need quick, accurate, and actionable financial insights.
 
-Upload your resume and writing samples so Ascent AI can learn your style. It doesn’t just write posts; it writes in your voice.
+The platform leverages multiple specialized AI agents working together to analyze financial documents, research companies, assess risks, and provide investment recommendations with professional-grade accuracy.
 
 ---
-## ✨ Core Features
+## 📊 Financial Analysis AI Features
 
-* **Flexible Workflows:** Choose between two powerful modes from the sidebar:
-    * **Strategic Branding:** A guided, multi-step process that builds a detailed, multi-week content strategy from your professional background and goals.
-    * **Quick Ideas:** A quick-start option to instantly generate single post ideas or a 3-part series on a specific topic without a full strategy.
+* **Multi-Input Analysis:** Analyze companies by name or upload financial documents (PDFs, annual reports, 10-K filings, earnings reports)
 
-* **Human-in-the-Loop (HITL) Feedback:** An interactive system allows you to critique and refine AI-generated strategies and post drafts until they're perfect.
+* **Comprehensive Analysis Suite:**
+    * **Financial Document Analyzer:** Extract and analyze key financial metrics from uploaded documents
+    * **Company Research Specialist:** In-depth fundamental analysis of public companies
+    * **Financial Ratio Analyst:** Calculate and interpret liquidity, profitability, efficiency, and leverage ratios
+    * **Investment Advisor:** Generate buy/sell recommendations with detailed rationale
+    * **Risk Assessment Specialist:** Comprehensive risk evaluation across multiple categories
+    * **Market Comparison Analyst:** Benchmark companies against industry peers
 
-* **Authentic Voice Generation:** Upload writing samples so the AI can learn and replicate your unique tone and style, ensuring content truly reflects you.
+* **Interactive AI Chat:** Ask follow-up questions about the analysis with context-aware responses
 
-* **Multi-Agent AI Crew:** Powered by CrewAI, the app uses a team of specialized AI agents for a robust workflow:
-    * **Professional Resume Summarizer (Groq):** Concisely summarizes your professional background and career goals.
-    * **Personal Branding Strategist (Gemini):** Creates a tailored, multi-week content strategy.
-    * **Content Ideation Agent (Groq):** Brainstorms creative and engaging post ideas at high speed.
-    * **LinkedIn Ghostwriter (Gemini):** Drafts polished, full-length posts in your authentic voice.
-    * **Quality Assurance Agent (Gemini):** Reviews drafted posts for clarity, tone, and strategic impact.
-    * **Title Generator (Groq):** Automatically creates concise titles for your sessions.
+* **Professional Reports:** Generate and download comprehensive analysis reports and investment recommendations
 
-* **Heterogeneous LLMs:** Strategically uses different Large Language Models for different tasks—**Google's Gemini** for deep strategic analysis and polished writing, and **Groq's Llama** for high-speed creative generation and concise tasks.
+The platform employs a multi-agent AI architecture with specialized financial analysis agents:
 
-* **Polished SaaS UI:** A clean, four-tab interface separates your workspace (`Brand Strategy`, `Post Ideas`, `Quick Ideas`, and `Final Post`) for a focused workflow.
+* **Financial Document Analyzer:** Extract and interpret key metrics from PDFs, annual reports, and 10-K filings
+* **Company Research Specialist:** Comprehensive fundamental analysis of public companies  
+* **Financial Ratio Analyst:** Calculate and interpret liquidity, profitability, efficiency, and leverage ratios
+* **Investment Advisor:** Generate buy/sell recommendations with detailed investment thesis
+* **Risk Assessment Specialist:** Multi-dimensional risk evaluation (financial, operational, market, strategic)
+* **Market Comparison Analyst:** Benchmark companies against industry peers and market indices
+* **Trend Analysis Agent:** Identify patterns and trajectories in historical financial data
 
-* **Comprehensive Session Management:** A professional sidebar allows you to create, load, rename, and delete past sessions, providing a history of your branding efforts.
+---
+## 💡 Key Features
 
-* **Export Functionality:** Easily download your generated strategies and finalized posts as clean text files.
+* **Multi-Format Document Support:** Process PDFs, CSV files, and text documents simultaneously
+* **Dual Analysis Modes:** Upload financial documents OR research companies by name
+* **Interactive AI Chat:** Ask follow-up questions with full context awareness  
+* **Professional Reporting:** Generate executive-ready analysis reports and presentations
+* **Advanced Visualizations:** Automatic chart generation for CSV financial data
+* **Session Management:** Save, organize, and revisit multiple analysis sessions
+* **Export Capabilities:** Download comprehensive reports in multiple formats
 
 ---
 ## 💻 Built With
@@ -57,8 +68,8 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/your-username/ascent-ai.git](https://github.com/your-username/ascent-ai.git)
-    cd ascent-ai
+    git clone [https://github.com/your-username/ceo-ai-assistant.git](https://github.com/your-username/ceo-ai-assistant.git)
+    cd ceo-ai-assistant
     ```
 2.  **Create and activate a virtual environment:**
     ```sh
@@ -89,8 +100,33 @@ Follow these instructions to get a copy of the project up and running on your lo
 With your virtual environment active, run the following command in your terminal:
 
 ```sh
-streamlit run app.py
+streamlit run Home.py
 ```
+
+---
+### Using CEO AI Assistant
+
+The application features a streamlined 4-tab interface designed for comprehensive financial analysis:
+
+* **📊 Analysis Tab:**  
+  Upload financial documents (PDFs, CSVs) or enter company names for research.  
+  The AI processes your input and provides initial analysis and insights.  
+  Track progress through the analysis pipeline with visual indicators.
+
+* **📈 Key Metrics Tab:**  
+  View extracted financial metrics, calculated ratios, and risk assessments.  
+  Generate detailed ratio analysis and comprehensive risk evaluation reports.  
+  Visualize financial data with automatic chart generation for CSV uploads.
+
+* **💬 AI Chat Tab:**  
+  Interactive conversation with context-aware financial analysis AI.  
+  Ask follow-up questions about the analysis, request clarifications, or explore specific aspects.  
+  Get explanations in plain language or technical detail as needed.
+
+* **📋 Reports Tab:**  
+  Generate professional investment recommendations with detailed rationale.  
+  Download comprehensive analysis reports in multiple formats.  
+  Export chat history and key findings for presentations or documentation.
 
 ---
 ### Navigating the App

@@ -1,8 +1,8 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Ascent AI - AI-Powered Personal Branding",
-    page_icon="🚀",
+    page_title="CEO AI Assistant - Financial Intelligence Platform",
+    page_icon="�",
     layout="wide"
 )
 
@@ -85,83 +85,99 @@ st.markdown("""
 with st.container():
     st.markdown("""
     <div class="hero-section">
-        <h1>Ascent AI: Your Co-Pilot for Professional Branding</h1>
-        <p>Turn your career story into a powerful online presence. Ascent AI helps you share posts in your authentic voice, join the right conversations, and grow your influence as a thought leader on LinkedIn.</p>
+        <h1>💼 CEO AI Assistant</h1>
+        <p>Your intelligent financial analysis companion. Get comprehensive insights from company research, financial documents, and data analysis powered by advanced AI agents.</p>
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1,1,1])
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Start Your Branding Journey", use_container_width=True, type="primary"):
-            st.switch_page("pages/2_Ascent_AI_App.py")
+        if st.button("� Start Financial Analysis", use_container_width=True, type="primary", key="main_cta"):
+            st.switch_page("pages/3_Financial_Analysis.py")
 
 st.markdown("---")
 
-# --- App Navigation & Workflow Section ---
+# --- Core Features Section ---
 with st.container():
-    #st.markdown('<div class="section">', unsafe_allow_html=True)
-    st.header("How It Works: Navigating the Workflow")
+    st.header("Comprehensive Financial Intelligence")
     st.markdown("""
-    Ascent AI is structured around two main workflows, accessed via the sidebar. Each workflow guides you through a specific content creation process, using a sequence of tabs.
+    CEO AI Assistant provides enterprise-grade financial analysis tools powered by advanced AI agents.
     """)
     
-    # Strategic Branding Workflow
-    st.subheader("📝 Strategic Branding Workflow")
-    st.markdown("""
-    This is a guided, multi-step process for building a long-term content strategy. This workflow uses the different tabs to help you define your professional brand, generate a detailed content strategy, brainstorm ideas from that strategy, and draft final posts.
+    # Financial Analysis Capabilities
+    st.subheader("📊 Financial Analysis Capabilities")
     
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **📄 Document Analysis**
+        - Upload PDF financial reports (10-K, 10-Q, annual reports)
+        - Process CSV financial data and spreadsheets
+        - Extract key metrics automatically
+        - Generate comprehensive analysis reports
+        """)
+        
+        st.markdown("""
+        **🏢 Company Research**
+        - Research any public company by name
+        - Fundamental analysis and valuation
+        - Industry comparisons and benchmarking
+        - Investment recommendations with rationale
+        """)
+    
+    with col2:
+        st.markdown("""
+        **📈 Advanced Analytics**
+        - Financial ratio calculations and interpretation
+        - Risk assessment across multiple categories
+        - Trend analysis and forecasting
+        - Portfolio optimization insights
+        """)
+        
+        st.markdown("""
+        **💬 AI-Powered Insights**
+        - Interactive chat with financial context
+        - Ask follow-up questions about analysis
+        - Get explanations in plain language
+        - Export professional reports
+        """)
+
+    # Workflow demonstration
+    st.subheader("🔄 How It Works")
+    st.markdown("""
     <div class="workflow-flow">
-        <div class="flow-step">Start Brand Strategy button</div>
+        <div class="flow-step">Upload Documents or Enter Company</div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">📝 Brand Strategy tab</div>
+        <div class="flow-step">AI Analyzes Data</div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">💡 Post Ideas tab</div>
+        <div class="flow-step">Interactive Dashboard</div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">✍️ Final Post tab</div>
+        <div class="flow-step">Export Reports</div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Quick Ideas Workflow
-    st.markdown("---")
-    st.subheader("✨ Quick Ideas Workflow")
-    st.markdown("""
-    Using this on-demand workflow you can instantly generate single-post ideas or a 3-part series on any topic without a full strategy. The **Final Post** tab is always available to help you draft and refine your posts, regardless of the workflow you chose.
-    
-    <div class="workflow-flow">
-        <div class="flow-step">Quick Ideas button</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">✨ Quick Ideas tab</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">✍️ Final Post tab</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# --- Core Features Section ---
+# --- Why Choose CEO AI Assistant ---
 with st.container():
-    #st.markdown('<div class="section">', unsafe_allow_html=True)
-    st.header("Why Ascent AI Stands Out")
+    st.header("Why Choose CEO AI Assistant")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("✨ Personalized Strategy & Ideas")
-        st.write("We go beyond basic prompts. Our AI crafts a personalized posting plan designed around your unique career goals and professional background.")
+        st.subheader("🤖 Multi-Agent AI Architecture")
+        st.write("Powered by specialized AI agents including Financial Document Analyzers, Investment Advisors, Risk Assessment Specialists, and Market Comparison Analysts working together for comprehensive insights.")
     with col2:
-        st.subheader("💡 Human-in-the-Loop Feedback")
-        st.write("You are in control. Our interactive system allows you to critique and refine every AI-generated strategy, idea, or draft until it perfectly matches your vision.")
+        st.subheader("� Professional-Grade Analysis")
+        st.write("Enterprise-level financial analysis capabilities including ratio analysis, risk assessment, peer comparisons, and investment recommendations typically found in expensive financial software.")
     
     col3, col4 = st.columns(2)
     with col3:
-        st.subheader("✍️ Authentic Voice Generation")
-        st.write("Upload your resume and writing samples, and Ascent AI learns and writes in your authentic tone and style, ensuring every post truly reflects you.")
+        st.subheader("🔄 Multi-Format Support")
+        st.write("Process PDFs, CSV files, and text documents simultaneously. Upload annual reports alongside financial spreadsheets for the most comprehensive analysis possible.")
     with col4:
-        st.subheader("⚡ A Complete AI Crew")
-        st.write("Powered by a multi-agent CrewAI system, Ascent AI uses specialized agents for each task, from summarizing your resume to generating polished, ready-to-publish posts.")
-        
-    #st.markdown('</div>', unsafe_allow_html=True)
+        st.subheader("💼 Executive-Ready Reports")
+        st.write("Generate professional reports and presentations ready for board meetings, investor presentations, or strategic planning sessions with downloadable formats.")
 
 st.divider()
 
@@ -169,12 +185,12 @@ st.divider()
 with st.container():
     st.markdown("""
     <div class="hero-section">
-        <h2>Ready to Build Influence on LinkedIn?</h2>
-        <p>Stop overthinking what to post. Let Ascent AI learn your voice, craft your strategy, and generate content that helps you stand out from the crowd.</p>
+        <h2>Ready to Make Smarter Financial Decisions?</h2>
+        <p>Transform complex financial data into actionable insights. Let CEO AI Assistant analyze companies, assess risks, and provide investment recommendations with the power of advanced AI.</p>
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1,1,1])
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Get Started Now", use_container_width=True, type="primary"):
-            st.switch_page("pages/2_Ascent_AI_App.py")
+        if st.button("� Start Financial Analysis Now", use_container_width=True, type="primary", key="bottom_cta"):
+            st.switch_page("pages/3_Financial_Analysis.py")

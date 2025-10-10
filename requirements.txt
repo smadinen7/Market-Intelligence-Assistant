@@ -6,6 +6,7 @@ groq
 langchain-groq
 langchain-google-genai
 pypdf
+pandas
 streamlit-local-storage
 streamlit-scrollable-textbox
 
