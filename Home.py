@@ -1,10 +1,14 @@
 import streamlit as st
+from utils import get_memory
 
 st.set_page_config(
     page_title="CEO AI Assistant - Financial Intelligence Platform",
-    page_icon="�",
+    page_icon="",
     layout="wide"
 )
+
+# --- SESSION STATE INITIALIZATION ---
+get_memory()
 
 # --- Custom CSS for styling ---
 st.markdown("""
@@ -81,6 +85,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- Main Content Area ---
 # --- Hero Section ---
 with st.container():
     st.markdown("""
@@ -90,10 +95,13 @@ with st.container():
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📄 Internal Analysis", use_container_width=True, type="primary"):
+            st.switch_page("pages/1_Internal_Analysis.py")
     with col2:
-        if st.button("� Start Financial Analysis", use_container_width=True, type="primary", key="main_cta"):
-            st.switch_page("pages/3_Financial_Analysis.py")
+        if st.button("📈 Market Analysis", use_container_width=True, type="secondary"):
+            st.switch_page("pages/2_Market_Analysis.py")
 
 st.markdown("---")
 
@@ -168,7 +176,7 @@ with st.container():
         st.subheader("🤖 Multi-Agent AI Architecture")
         st.write("Powered by specialized AI agents including Financial Document Analyzers, Investment Advisors, Risk Assessment Specialists, and Market Comparison Analysts working together for comprehensive insights.")
     with col2:
-        st.subheader("� Professional-Grade Analysis")
+        st.subheader(" Professional-Grade Analysis")
         st.write("Enterprise-level financial analysis capabilities including ratio analysis, risk assessment, peer comparisons, and investment recommendations typically found in expensive financial software.")
     
     col3, col4 = st.columns(2)
@@ -190,7 +198,10 @@ with st.container():
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📄 Internal Analysis Now", use_container_width=True, type="primary"):
+            st.switch_page("pages/1_Internal_Analysis.py")
     with col2:
-        if st.button("� Start Financial Analysis Now", use_container_width=True, type="primary", key="bottom_cta"):
-            st.switch_page("pages/3_Financial_Analysis.py")
+        if st.button("📈 Market Analysis Now", use_container_width=True, type="secondary"):
+            st.switch_page("pages/2_Market_Analysis.py")

@@ -1,12 +1,14 @@
 streamlit
-crewai
+crewai>=0.64
 crewai-tools
 python-dotenv
 groq
 langchain-groq
 langchain-google-genai
+google-genai>=0.3.0
 pypdf
 pandas
 streamlit-local-storage
 streamlit-scrollable-textbox
-
+litellm>=1.45.0
+crewai[litellm]>=0.64

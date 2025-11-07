@@ -4,6 +4,45 @@ import io
 import re
 import pandas as pd
 
+class CentralMemory:
+    def __init__(self):
+        self.memory = {
+            "internal_analysis": {},
+            "market_analysis": {},
+            "current_focus": None
+        }
+
+    def set_focus(self, focus):
+        self.memory["current_focus"] = focus
+
+    def get_focus(self):
+        return self.memory["current_focus"]
+
+    def update_internal_analysis(self, data):
+        self.memory["internal_analysis"].update(data)
+
+    def get_internal_analysis(self):
+        return self.memory["internal_analysis"]
+
+    def update_market_analysis(self, data):
+        self.memory["market_analysis"].update(data)
+
+    def get_market_analysis(self):
+        return self.memory["market_analysis"]
+
+    def get_chat_context(self):
+        focus = self.get_focus()
+        if focus == "internal_analysis":
+            return self.get_internal_analysis().get("document_content", "")
+        elif focus == "market_analysis":
+            return self.get_market_analysis().get("company_analysis", "")
+        return ""
+
+def get_memory():
+    if 'central_memory' not in st.session_state:
+        st.session_state.central_memory = CentralMemory()
+    return st.session_state.central_memory
+
 def process_uploaded_files(uploaded_files):
     """Reads text from uploaded files (PDF, TXT, MD, CSV) and combines them."""
     combined_text = ""
