@@ -1,131 +1,115 @@
-# � CEO AI Assistant
+# 🤖 CEO AI Assistant: Competitive Intelligence Platform
 
-### AI-Powered Financial Intelligence Platform
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-orange.svg)](https://streamlit.io)
+[![CrewAI](https://img.shields.io/badge/AI%20Framework-CrewAI-green.svg)](https://www.crewai.com/)
 
-CEO AI Assistant is a sophisticated Streamlit application that provides comprehensive financial analysis and intelligence through advanced AI agents. Designed for executives, investors, analysts, and financial professionals who need quick, accurate, and actionable financial insights.
+An advanced AI-powered platform designed for executives, strategists, and analysts to gain deep insights into their competitive landscape. This tool goes beyond simple financial analysis, leveraging a crew of specialized AI agents and a dynamic knowledge graph to model and query complex market ecosystems.
 
-The platform leverages multiple specialized AI agents working together to analyze financial documents, research companies, assess risks, and provide investment recommendations with professional-grade accuracy.
-
----
-## 📊 Financial Analysis AI Features
-
-* **Multi-Input Analysis:** Analyze companies by name or upload financial documents (PDFs, annual reports, 10-K filings, earnings reports)
-
-* **Comprehensive Analysis Suite:**
-    * **Financial Document Analyzer:** Extract and analyze key financial metrics from uploaded documents
-    * **Company Research Specialist:** In-depth fundamental analysis of public companies
-    * **Financial Ratio Analyst:** Calculate and interpret liquidity, profitability, efficiency, and leverage ratios
-    * **Investment Advisor:** Generate buy/sell recommendations with detailed rationale
-    * **Risk Assessment Specialist:** Comprehensive risk evaluation across multiple categories
-    * **Market Comparison Analyst:** Benchmark companies against industry peers
-
-* **Interactive AI Chat:** Ask follow-up questions about the analysis with context-aware responses
-
-* **Professional Reports:** Generate and download comprehensive analysis reports and investment recommendations
-
-The platform employs a multi-agent AI architecture with specialized financial analysis agents:
-
-* **Financial Document Analyzer:** Extract and interpret key metrics from PDFs, annual reports, and 10-K filings
-* **Company Research Specialist:** Comprehensive fundamental analysis of public companies  
-* **Financial Ratio Analyst:** Calculate and interpret liquidity, profitability, efficiency, and leverage ratios
-* **Investment Advisor:** Generate buy/sell recommendations with detailed investment thesis
-* **Risk Assessment Specialist:** Multi-dimensional risk evaluation (financial, operational, market, strategic)
-* **Market Comparison Analyst:** Benchmark companies against industry peers and market indices
-* **Trend Analysis Agent:** Identify patterns and trajectories in historical financial data
+Enter your company, and the assistant will identify your top competitors, perform deep-dive analyses, and build an interactive "market brain" that you can query to uncover strategic threats and opportunities.
 
 ---
-## 💡 Key Features
 
-* **Multi-Format Document Support:** Process PDFs, CSV files, and text documents simultaneously
-* **Dual Analysis Modes:** Upload financial documents OR research companies by name
-* **Interactive AI Chat:** Ask follow-up questions with full context awareness  
-* **Professional Reporting:** Generate executive-ready analysis reports and presentations
-* **Advanced Visualizations:** Automatic chart generation for CSV financial data
-* **Session Management:** Save, organize, and revisit multiple analysis sessions
-* **Export Capabilities:** Download comprehensive reports in multiple formats
+## ✨ Core Features
 
----
-## 💻 Built With
-
-* **Frontend:** [Streamlit](https://streamlit.io/)
-* **AI Framework:** [CrewAI](https://www.crewai.com/)
-* **LLMs:** [Google Gemini](https://ai.google.dev/) & [Groq Llama](https://groq.com/)
-* **Core Libraries:** `streamlit`, `crewai`, `langchain-groq`, `langchain-google-genai`, `pypdf`, `streamlit-local-storage`
+*   **Dynamic Competitor Identification:** Automatically identifies your top 3 direct competitors based on market, product, and strategic positioning.
+*   **In-Depth Competitive Analysis:** Conducts a comprehensive intelligence analysis on selected competitors, covering strategic moves, market position, financial health, and direct threats to your company.
+*   **Interactive Knowledge Graph:** Automatically builds and visualizes a knowledge graph of your market. See the web of relationships between companies, products, and markets.
+*   **Advanced AI Chat:** Ask complex, relational questions in plain English (e.g., "What markets do we share with our competitor?") and get precise answers powered by the knowledge graph.
+*   **Persistent Market Memory:** The knowledge graph evolves with each analysis, creating an ever-smarter "market brain" that becomes more valuable over time.
 
 ---
+
+## 🏛️ How It Works: Architecture Overview
+
+This platform uses a sophisticated hybrid AI architecture that combines the broad knowledge of LLMs with the precision of a structured knowledge graph.
+
+1.  **Frontend (Streamlit):** A clean, interactive web interface that orchestrates the user workflow.
+2.  **AI Agent Crew (CrewAI):** A team of specialized AI agents, each with a unique role:
+    *   **Competitor Identification Agent:** Discovers who your competitors are.
+    *   **Competitive Intelligence Agent:** Performs deep-dive research on a specific competitor.
+    *   **Knowledge Graph Analyst:** Extracts structured entities from unstructured text and answers complex, graph-based questions.
+3.  **Dynamic Knowledge Graph (`networkx`):** The central "brain" of the application.
+    *   **Population:** The graph is built and enriched in real-time. An AI agent reads the analysis reports and populates the graph with entities (Companies, Products, Markets) and their relationships (`COMPETES_WITH`, `OPERATES_IN`).
+    *   **Querying:** For complex questions, the AI queries this structured graph to provide fast, accurate, and reliable answers.
+
+This architecture allows the system to reason about complex relationships and deliver insights that would be impossible to find with text analysis alone.
+
+---
+
 ## 🚀 Getting Started
 
-Follow these instructions to get a copy of the project up and running on your local machine.
+Follow these instructions to get the project running on your local machine.
 
 ### Prerequisites
 
-* **Python 3.11:** The application is built and tested with Python 3.11. You can download it from the [official Python website](https://www.python.org/).
-* **API Keys:** You will need API keys from both of the following services:
-    * [Google AI Studio](https://aistudio.google.com/) for the Gemini API Key.
-    * [GroqCloud](https://console.groq.com/) for the Groq API Key.
+*   **Python 3.11**
+*   **API Keys** for:
+    *   [Google AI Studio](https://aistudio.google.com/) (for Gemini)
+    *   [GroqCloud](https://console.groq.com/) (for Llama)
 
 ### Installation
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/your-username/ceo-ai-assistant.git](https://github.com/your-username/ceo-ai-assistant.git)
+    git clone <your-repository-url>
     cd ceo-ai-assistant
     ```
+
 2.  **Create and activate a virtual environment:**
     ```sh
     # Create the venv
     python3.11 -m venv .venv
 
-    # Activate the venv (macOS/Linux)
+    # Activate on macOS/Linux
     source .venv/bin/activate
 
-    # Or, activate the venv (Windows)
-    .\.venv\Scripts\activate
+    # Activate on Windows
+    # .\\.venv\\Scripts\\activate
     ```
+
 3.  **Install the required packages:**
     ```sh
     pip install -r requirements.txt
     ```
+
 4.  **Set up your environment variables:**
-    * Create a file named `.env` in the root of your project directory.
-    * Add your API keys to the `.env` file as follows:
+    *   Create a file named `.env` in the root of your project.
+    *   Add your API keys to the `.env` file:
         ```env
         GEMINI_API_KEY="your_google_api_key_here"
         GROQ_API_KEY="your_groq_api_key_here"
         ```
 
 ---
+
 ## 📖 Usage
 
-With your virtual environment active, run the following command in your terminal:
+1.  **Run the application:**
+    With your virtual environment active, run the following command in your terminal:
+    ```sh
+    streamlit run Home.py
+    ```
 
-```sh
-streamlit run Home.py
-```
+2.  **Start a New Analysis:**
+    *   From the sidebar, click **"New Competitive Analysis"**.
 
----
-### Using CEO AI Assistant
+3.  **Identify Competitors:**
+    *   Enter your company's name in the text input.
+    *   Click **"Identify Competitors"**. The AI will analyze the market and present your top 3 competitors.
 
-The application features a streamlined 4-tab interface designed for comprehensive financial analysis:
+4.  **Analyze and Explore:**
+    *   Click the **"Analyze [Competitor Name]"** button for a competitor you want to investigate.
+    *   The AI will perform a deep-dive analysis and populate the knowledge graph.
+    *   Navigate to the **"Detailed Analysis"** tab to view the full report and the interactive knowledge graph visualization.
 
-* **📊 Analysis Tab:**  
-  Upload financial documents (PDFs, CSVs) or enter company names for research.  
-  The AI processes your input and provides initial analysis and insights.  
-  Track progress through the analysis pipeline with visual indicators.
-
-* **📈 Key Metrics Tab:**  
-  View extracted financial metrics, calculated ratios, and risk assessments.  
-  Generate detailed ratio analysis and comprehensive risk evaluation reports.  
-  Visualize financial data with automatic chart generation for CSV uploads.
-
-* **💬 AI Chat Tab:**  
-  Interactive conversation with context-aware financial analysis AI.  
-  Ask follow-up questions about the analysis, request clarifications, or explore specific aspects.  
-  Get explanations in plain language or technical detail as needed.
-
-* **📋 Reports Tab:**  
-  Generate professional investment recommendations with detailed rationale.  
-  Download comprehensive analysis reports in multiple formats.  
-  Export chat history and key findings for presentations or documentation.
+5.  **Ask Questions:**
+    *   Use the chat interface on the right to ask simple or complex questions about the competitive landscape.
 
 ---
+
+## 🔮 Future Work
+
+*   **Enable Agent Delegation:** Allow agents to autonomously trigger new research tasks to fill in gaps in the knowledge graph.
+*   **Time-Series Analysis:** Track changes in the knowledge graph over time to analyze how competitive dynamics evolve.
+*   **Deeper Integrations:** Connect to external data sources (e.g., financial APIs, news APIs) to automatically enrich the knowledge graph.
