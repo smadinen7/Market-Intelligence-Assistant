@@ -372,6 +372,35 @@ Always write in present tense, declarative statements.""",
             agent=agent
         )
 
+    def online_research_task(self, agent, query, company_name="", context=""):
+        return Task(
+            description=f"""Research the following query online:
+
+{query}
+
+Company Context: {company_name}
+Additional Context: {context}
+
+Instructions:
+1. Focus on finding current, factual information from reliable sources
+2. If researching a company, prioritize:
+   - Recent news and developments
+   - Market position and competitive landscape
+   - Financial performance and metrics
+   - Products and services
+   - Strategic initiatives
+
+3. Present information in these categories:
+   - Key Facts: Direct, verifiable information
+   - Market Context: Industry trends and market position
+   - Competitive Insights: Relative position and competitive dynamics
+   - Recent Developments: Latest news and changes (within last 6 months)
+
+Format your response as direct statements without referencing sources or analysis process.""",
+            expected_output="Current, factual information presented directly without meta-commentary.",
+            agent=agent
+        )
+
     def entity_extraction_task(self, agent, analysis_text, user_company, competitor_company):
         return Task(
             description=f"""Extract structured entities and relationships from the competitive intelligence analysis.

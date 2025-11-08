@@ -10,7 +10,11 @@ gemini_llm = LLM(
     model="gemini/gemini-2.5-flash-lite"
 )
 
-# All agents will use Gemini LLM
+groq_llm = LLM(
+    api_key=os.getenv("GROQ_API_KEY"),
+    model="llama2-70b-4096"
+)
+
 class FinancialAgents:
     
     def financial_document_analyzer_agent(self):
@@ -104,9 +108,10 @@ class FinancialAgents:
             backstory=(
                 "You are a comparative analysis expert who specializes in benchmarking companies "
                 "against their industry peers and market indices. You can identify relative "
-                "strengths, weaknesses, and competitive positioning."
+                "strengths, weaknesses, and competitive positioning. Your advanced processing "
+                "capabilities allow you to quickly analyze and compare large amounts of market data."
             ),
-            llm=gemini_llm,
+            llm=groq_llm,  # Using Groq for faster processing of comparative data
             verbose=False,
             allow_delegation=False
         )
@@ -152,6 +157,22 @@ class FinancialAgents:
                 "can be easily parsed into a knowledge graph."
             ),
             llm=gemini_llm,
+            verbose=False,
+            allow_delegation=False
+        )
+
+    def online_research_agent(self):
+        return Agent(
+            role='Online Research Specialist',
+            goal="Research and gather current market information from online sources to supplement internal knowledge.",
+            backstory=(
+                "You are an expert market researcher with a talent for finding and synthesizing "
+                "information from various online sources. You specialize in gathering current market data, "
+                "company information, and competitive intelligence. You excel at validating and cross-referencing "
+                "information to ensure accuracy and relevance. You always aim to provide the most up-to-date "
+                "and reliable market insights. Your fast processing of web data helps provide quick, accurate insights."
+            ),
+            llm=gemini_llm,  # Using Groq for faster web search processing
             verbose=False,
             allow_delegation=False
         )

@@ -245,6 +245,7 @@ with main_col:
                     # Initialize progress and status containers
                     progress_container = st.empty()
                     status_container = st.empty()
+                    debug_container = st.empty()  # For debugging information
                     progress_container.progress(0)
                     
                     try:
@@ -252,22 +253,44 @@ with main_col:
                         status_container.info("📊 Step 1/3: Gathering competitive intelligence...")
                         progress_container.progress(0.15)
                         
+                        # Debug info
+                        debug_container.code(f"""Debug Info:
+User Company: {session.get('user_company')}
+Selected Competitor: {selected_competitor}
+Analysis State: Starting competitive intelligence analysis""")
+                        
                         intel_agent = financial_agents.competitive_intelligence_agent()
                         intel_task = financial_tasks.competitive_intelligence_task(
                             intel_agent, 
                             session["user_company"], 
                             selected_competitor
                         )
+                        
+                        # Use smaller crew for initial analysis
                         crew = Crew(
                             agents=[intel_agent], 
                             tasks=[intel_task], 
-                            process=Process.sequential
+                            process=Process.sequential,
+                            verbose=True  # Enable verbose mode for debugging
                         )
+                        
+                        debug_container.code("Attempting competitive analysis...")
                         competitive_analysis = crew.kickoff()
-                        if not competitive_analysis or not competitive_analysis.raw:
-                            raise Exception("Failed to generate competitive analysis")
+                        
+                        if not competitive_analysis:
+                            debug_container.error("Crew kickoff returned None")
+                            raise Exception("Analysis failed - no response from crew")
+                        
+                        if not hasattr(competitive_analysis, 'raw'):
+                            debug_container.error(f"Unexpected response format: {type(competitive_analysis)}")
+                            raise Exception("Analysis failed - invalid response format")
+                        
+                        if not competitive_analysis.raw:
+                            debug_container.error("Empty response from analysis")
+                            raise Exception("Analysis failed - empty response")
                         
                         competitive_analysis = competitive_analysis.raw
+                        debug_container.code(f"Analysis successful. Response length: {len(competitive_analysis)}")
                         progress_container.progress(0.35)
                         
                         # Step 2: Extract entities and populate knowledge graph
@@ -468,8 +491,10 @@ with chat_col:
                         "Knowledge Graph": financial_agents.knowledge_graph_analyst_agent()
                     }
                     
-                    # Initialize primary response agent
+                    # Initialize agents
                     primary_agent = financial_agents.competitive_intelligence_agent()
+                    online_agent = financial_agents.online_research_agent()
+                    tasks = []
                     
                     # Create main task with context from knowledge graph
                     main_task = financial_tasks.financial_chat_response_task(
@@ -477,6 +502,16 @@ with chat_col:
                         user_question=prompt,
                         context=f"""Knowledge Graph Context:\n{graph_context}\n\nChat History:\n{chat_context}"""
                     )
+                    tasks.append(main_task)
+                    
+                    # Add online research task to gather additional information
+                    online_task = financial_tasks.online_research_task(
+                        agent=online_agent,
+                        query=prompt,
+                        company_name=session.get("user_company", ""),
+                        context=chat_context
+                    )
+                    tasks.append(online_task)
                     
                     # Get metrics from knowledge graph for additional context
                     kg = memory.get_knowledge_graph()
@@ -499,7 +534,6 @@ with chat_col:
                         }
                     
                     # Add market comparison task if relevant metrics exist
-                    tasks = [main_task]
                     if metrics["companies"] > 0:
                         comparison_agent = financial_agents.market_comparison_agent()
                         comparison_task = financial_tasks.peer_comparison_task(
@@ -510,9 +544,9 @@ with chat_col:
                         )
                         tasks.append(comparison_task)
                     
-                    # Run the crew with all tasks
+                    # Run all tasks with the crew
                     crew = Crew(
-                        agents=[primary_agent, financial_agents.market_comparison_agent()],
+                        agents=[primary_agent, online_agent, financial_agents.market_comparison_agent()],
                         tasks=tasks,
                         process=Process.sequential
                     )
@@ -521,10 +555,10 @@ with chat_col:
                     if crew_result and crew_result.raw:
                         response = crew_result.raw
                     else:
-                        # Fallback to direct response if crew fails
+                        # Fallback to simple online research if crew fails
                         fallback_crew = Crew(
-                            agents=[primary_agent],
-                            tasks=[main_task],
+                            agents=[online_agent],
+                            tasks=[online_task],
                             process=Process.sequential
                         )
                         fallback_result = fallback_crew.kickoff()
