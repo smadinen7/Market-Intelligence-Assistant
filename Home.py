@@ -1,5 +1,11 @@
 import streamlit as st
-from utils import get_memory
+from utils import get_memory, validate_company_name
+from crewai import Crew, Process
+from financial_agents import FinancialAgents
+from financial_tasks import FinancialTasks
+from datetime import datetime
+import uuid
+import re
 
 st.set_page_config(
     page_title="CEO AI Assistant - Financial Intelligence Platform",
@@ -8,7 +14,27 @@ st.set_page_config(
 )
 
 # --- SESSION STATE INITIALIZATION ---
-get_memory()
+memory = get_memory()
+
+# Initialize market session structures so Market Analysis page finds them
+if "market_sessions" not in st.session_state:
+    st.session_state.market_sessions = {}
+if "current_market_session_id" not in st.session_state:
+    st.session_state.current_market_session_id = None
+
+# Helper: parse competitor names from AI output
+def _parse_competitors(competitor_text):
+    pattern = r'\*\*Competitor \d+:\s*([^*\n]+?)\*\*'
+    matches = re.findall(pattern, competitor_text)
+    if matches:
+        return [m.strip() for m in matches[:3]]
+    # fallback: split on newlines and take first 3 non-empty lines
+    lines = [l.strip() for l in competitor_text.splitlines() if l.strip()]
+    return lines[:3]
+
+# Instantiate agents/tasks factory
+financial_agents = FinancialAgents()
+financial_tasks = FinancialTasks()
 
 # --- Custom CSS for styling ---
 st.markdown("""
@@ -94,14 +120,89 @@ with st.container():
         <p>Your intelligent financial analysis companion. Get comprehensive insights from company research, financial documents, and data analysis powered by advanced AI agents.</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("📄 Internal Analysis", use_container_width=True, type="primary"):
-            st.switch_page("pages/1_Internal_Analysis.py")
-    with col2:
-        if st.button("📈 Market Analysis", use_container_width=True, type="secondary"):
-            st.switch_page("pages/2_Market_Analysis.py")
+    # --- Quick Start: Set your company and jump to Competitive Analysis ---
+    with st.container():
+        st.subheader("Start: Enter your company")
+        cols = st.columns([3, 1])
+        with cols[0]:
+            with st.form(key="company_form"):
+                home_company_input = st.text_input(
+                    "Company Name",
+                    placeholder="e.g., Apple Inc., Tesla, Microsoft",
+                    help="Enter your company name to pre-load competitor analysis"
+                )
+                submitted = st.form_submit_button("Enter")
+
+        with cols[1]:
+            # Navigate to Market Analysis page; only available after a session is created
+            if st.button("Competitive Analysis", use_container_width=True, type="primary"):
+                if st.session_state.get("current_market_session_id"):
+                    st.switch_page("pages/2_Market_Analysis.py")
+                else:
+                    st.error("Please enter a company name and press Enter to start analysis before navigating to Competitive Analysis.")
+
+        # If the user submitted the form, start competitor identification on the backend
+        if submitted and home_company_input:
+            is_valid, clean_name = validate_company_name(home_company_input)
+            if not is_valid:
+                st.error("Please enter a valid company name.")
+            else:
+                session_id = str(uuid.uuid4())
+                st.session_state.current_market_session_id = session_id
+                initial_message = "Welcome to Competitive Intelligence! Identifying top competitors..."
+                conversation_state = "identifying_competitors"
+                st.session_state.market_sessions[session_id] = {
+                    "title": f"Competitive Intelligence - {home_company_input}",
+                    "session_type": "competitive",
+                    "messages": [{"role": "assistant", "content": initial_message}],
+                    "conversation_state": conversation_state,
+                    "analysis_data": {},
+                    "chat_history": [],
+                    "user_company": home_company_input,
+                    "competitors": [],
+                    "selected_competitor": None,
+                    "competitor_analyses": {},
+                    "analysis_results": {},
+                    "quick_metrics": {}
+                }
+
+                try:
+                    with st.spinner(f"Identifying top competitors for {home_company_input}..."):
+                        competitor_agent = financial_agents.competitor_identification_agent()
+                        competitor_task = financial_tasks.identify_competitors_task(competitor_agent, home_company_input)
+                        crew = Crew(agents=[competitor_agent], tasks=[competitor_task], process=Process.sequential)
+                        competitor_analysis = crew.kickoff().raw
+
+                        competitors = _parse_competitors(competitor_analysis or "")
+
+                        # populate knowledge graph
+                        kg = memory.get_knowledge_graph()
+                        kg.add_company(home_company_input, {'is_user_company': True})
+                        for competitor in competitors:
+                            kg.add_company(competitor, {'is_competitor': True})
+                            kg.add_relationship(home_company_input, competitor, 'competes_with', {
+                                'identified_at': datetime.now().isoformat()
+                            })
+
+                        st.session_state.market_sessions[session_id]["competitors"] = competitors
+                        st.session_state.market_sessions[session_id]["analysis_data"]["competitor_identification"] = competitor_analysis
+                        st.session_state.market_sessions[session_id]["conversation_state"] = "competitors_identified"
+                        st.session_state.market_sessions[session_id]["messages"].append({
+                            "role": "assistant",
+                            "content": f"I've identified the top {len(competitors)} competitors for {home_company_input}:\n\n{competitor_analysis}\n\nGo to 'Market Analysis' to select a competitor for detailed analysis."
+                        })
+                        memory.update_competitive_intelligence({
+                            "user_company": home_company_input,
+                            "competitors": competitors,
+                            "competitor_identification": competitor_analysis
+                        })
+
+                        st.success(f"Started competitor identification for {home_company_input}. Click 'Competitive Analysis' to go to Market Analysis.")
+                except Exception as e:
+                    st.error(f"Error identifying competitors: {e}")
+                    # keep existing home content visible
+                    pass
+    # (Removed redundant quick-navigation buttons; use the 'Competitive Analysis' button above)
 
 st.markdown("---")
 

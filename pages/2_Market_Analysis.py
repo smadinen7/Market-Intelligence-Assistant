@@ -107,6 +107,56 @@ def parse_competitors(competitor_text):
 financial_agents = FinancialAgents()
 financial_tasks = FinancialTasks()
 
+
+def run_competitor_identification(session):
+    """Run competitor identification for a session that was created on the Home page.
+    This function performs the same identification flow as the UI button, but is
+    safe to call on page load so the work starts as soon as the user submitted on Home.
+    """
+    user_company = session.get("user_company")
+    if not user_company:
+        return
+
+    try:
+        competitor_agent = financial_agents.competitor_identification_agent()
+        competitor_task = financial_tasks.identify_competitors_task(competitor_agent, user_company)
+        crew = Crew(agents=[competitor_agent], tasks=[competitor_task], process=Process.sequential)
+        competitor_analysis = crew.kickoff().raw
+
+        # Parse competitor names using existing helper
+        competitors = parse_competitors(competitor_analysis)
+
+        # populate knowledge graph
+        kg = memory.get_knowledge_graph()
+        kg.add_company(user_company, {'is_user_company': True})
+        for competitor in competitors:
+            kg.add_company(competitor, {'is_competitor': True})
+            kg.add_relationship(user_company, competitor, 'competes_with', {
+                'identified_at': datetime.now().isoformat()
+            })
+
+        session['competitors'] = competitors
+        session['analysis_data']['competitor_identification'] = competitor_analysis
+        session['conversation_state'] = 'competitors_identified'
+        session['messages'].append({
+            'role': 'assistant',
+            'content': f"I've identified the top {len(competitors)} competitors for {user_company}:\n\n{competitor_analysis}\n\nClick on a competitor below to get detailed competitive intelligence."
+        })
+
+        memory.update_competitive_intelligence({
+            'user_company': user_company,
+            'competitors': competitors,
+            'competitor_identification': competitor_analysis
+        })
+
+        # refresh the page to show new state
+        st.rerun()
+    except Exception as e:
+        # Surface error to UI and keep session in identifying state
+        st.error(f"Error identifying competitors: {e}")
+        session['conversation_state'] = 'awaiting_user_company'
+        return
+
 # --- SIDEBAR: SESSION MANAGEMENT ---
 with st.sidebar:
     st.title("📈 Competitive Intelligence")
@@ -118,6 +168,10 @@ with st.sidebar:
     
     # Show user company and competitors if available
     session = get_current_market_session()
+
+    # If this session was created on Home and marked as identifying, start identification now
+    if session and session.get('conversation_state') == 'identifying_competitors' and not session.get('competitors'):
+        run_competitor_identification(session)
     if session and session.get("user_company"):
         st.divider()
         st.subheader("Your Company")
