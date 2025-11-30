@@ -1,8 +1,18 @@
 import os
 from crewai import Agent, LLM
 from dotenv import load_dotenv
+import streamlit as st
 
 load_dotenv()
+
+# Load secrets from Streamlit if available
+try:
+    if "GEMINI_API_KEY" in st.secrets:
+        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
+    if "GROQ_API_KEY" in st.secrets:
+        os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+except FileNotFoundError:
+    pass # No secrets file found, rely on .env
 
 # Define the LLMs
 gemini_llm = LLM(
