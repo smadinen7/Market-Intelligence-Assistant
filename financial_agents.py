@@ -5,25 +5,63 @@ import streamlit as st
 
 load_dotenv()
 
-# Load secrets from Streamlit if available
-try:
-    if "GEMINI_API_KEY" in st.secrets:
-        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
-    if "GROQ_API_KEY" in st.secrets:
-        os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
-except FileNotFoundError:
-    pass # No secrets file found, rely on .env
+def get_api_key(key_name):
+    """Try to get API key from environment variables or Streamlit secrets."""
+    # First check environment variables
+    api_key = os.getenv(key_name)
+    if api_key:
+        return api_key
+    
+    # Then check Streamlit secrets
+    try:
+        if key_name in st.secrets:
+            # Set in os.environ as some libraries expect it there
+            os.environ[key_name] = st.secrets[key_name]
+            return st.secrets[key_name]
+    except (FileNotFoundError, AttributeError):
+        pass
+        
+    return None
+
+# Get API keys
+gemini_api_key = get_api_key("GEMINI_API_KEY")
+groq_api_key = get_api_key("GROQ_API_KEY")
+
+# Validate keys - we need at least Gemini for the main agents
+if not gemini_api_key:
+    error_msg = (
+        "⚠️ GEMINI_API_KEY not found! \n"
+        "Please set it in your .env file (locally) or Streamlit Cloud Secrets.\n"
+        "In Streamlit Cloud: Manage App -> Settings -> Secrets"
+    )
+    print(error_msg) # Print to server logs
+    try:
+        st.error(error_msg)
+        st.stop()
+    except:
+        raise ValueError(error_msg)
 
 # Define the LLMs
 gemini_llm = LLM(
-    api_key=os.getenv("GEMINI_API_KEY"),
+    api_key=gemini_api_key,
     model="gemini/gemini-2.5-flash"
 )
 
-groq_llm = LLM(
-    api_key=os.getenv("GROQ_API_KEY"),
-    model="groq/llama3-70b-8192"
-)
+# Groq is optional for some agents, but used in the code. 
+# If missing, we can fallback to Gemini or raise warning.
+if not groq_api_key:
+    print("Warning: GROQ_API_KEY not found. Some agents might fail if they strictly require it.")
+    # Fallback to Gemini if Groq is missing, or let it fail later?
+    # The code uses groq_llm for 'market_comparison_agent'.
+    # Let's fallback to Gemini to prevent crash if possible, or just allow None and let it fail if used.
+    # For now, we'll initialize it with Gemini key if Groq is missing to keep the app running,
+    # but ideally the user should provide it.
+    groq_llm = gemini_llm
+else:
+    groq_llm = LLM(
+        api_key=groq_api_key,
+        model="groq/llama3-70b-8192"
+    )
 
 class FinancialAgents:
     
