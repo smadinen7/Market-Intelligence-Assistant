@@ -17,12 +17,12 @@ except FileNotFoundError:
 # Define the LLMs
 gemini_llm = LLM(
     api_key=os.getenv("GEMINI_API_KEY"),
-    model="gemini/gemini-2.5-flash-lite"
+    model="gemini/gemini-2.5-flash"
 )
 
 groq_llm = LLM(
     api_key=os.getenv("GROQ_API_KEY"),
-    model="llama2-70b-4096"
+    model="groq/llama3-70b-8192"
 )
 
 class FinancialAgents:
