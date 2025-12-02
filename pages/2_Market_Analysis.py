@@ -7,10 +7,95 @@ from financial_tasks import FinancialTasks
 from utils import validate_company_name, get_memory
 import uuid
 import json
+import re
 from datetime import datetime
 
 # Load environment variables
 load_dotenv()
+
+def strip_thinking_from_response(response: str) -> str:
+    """Remove any 'Thought:' or chain-of-thought reasoning from LLM responses."""
+    if not response:
+        return response
+    
+    # If response starts with "Thought:" or "Thinking:", find where actual answer begins
+    if response.strip().startswith('Thought:') or response.strip().startswith('Thinking:'):
+        lines = response.split('\n')
+        answer_start_idx = 0
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            # Skip empty lines and lines that are clearly reasoning
+            if not stripped:
+                continue
+            if stripped.startswith('Thought:') or stripped.startswith('Thinking:'):
+                continue
+            if stripped.startswith('My task') or stripped.startswith('I have') or stripped.startswith('I will') or stripped.startswith('I need'):
+                continue
+            if stripped.startswith('The provided') or stripped.startswith('The context') or stripped.startswith('The core'):
+                continue
+            if stripped.startswith('Looking at') or stripped.startswith('Based on') or stripped.startswith('According to'):
+                continue
+            # This looks like actual content - not a reasoning line
+            if len(stripped) > 10 and not stripped.endswith(':'):
+                answer_start_idx = i
+                break
+        
+        # Return from the answer start
+        return '\n'.join(lines[answer_start_idx:]).strip()
+    
+    return response
+
+# --- ANALYSIS CONTEXT (stored in session state for Streamlit Cloud compatibility) ---
+def save_analysis_context(user_company: str, competitor: str, analysis: str, entities: str = ""):
+    """Save the competitor analysis to session state for chat context."""
+    if "market_analysis_context" not in st.session_state:
+        st.session_state.market_analysis_context = {
+            "user_company": user_company,
+            "competitors": {},
+            "last_updated": None
+        }
+    
+    # Update with new analysis
+    st.session_state.market_analysis_context["user_company"] = user_company
+    st.session_state.market_analysis_context["competitors"][competitor] = {
+        "analysis": analysis,
+        "entities": entities,
+        "analyzed_at": datetime.now().isoformat()
+    }
+    st.session_state.market_analysis_context["last_updated"] = datetime.now().isoformat()
+
+def load_analysis_context() -> dict:
+    """Load the saved analysis context from session state."""
+    return st.session_state.get("market_analysis_context", {})
+
+def get_full_analysis_context() -> str:
+    """Get a formatted string of all saved analyses for chat context."""
+    context_data = load_analysis_context()
+    if not context_data:
+        return ""
+    
+    context_parts = []
+    user_company = context_data.get("user_company", "Unknown")
+    context_parts.append(f"User Company: {user_company}\n")
+    
+    competitors = context_data.get("competitors", {})
+    
+    # Include competitor identification first (special key)
+    if "__identification__" in competitors:
+        context_parts.append("\n=== Competitor Identification ===")
+        context_parts.append(competitors["__identification__"].get("analysis", ""))
+    
+    # Then include individual competitor analyses
+    for competitor, data in competitors.items():
+        if competitor == "__identification__":
+            continue  # Already handled above
+        context_parts.append(f"\n=== Analysis of {competitor} ===")
+        context_parts.append(data.get("analysis", ""))
+        if data.get("entities"):
+            context_parts.append(f"\n--- Extracted Entities ---\n{data.get('entities')}")
+    
+    return "\n".join(context_parts)
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="CEO AI Assistant - Market Analysis", page_icon="📈", layout="wide")
@@ -249,6 +334,14 @@ def run_competitor_identification(session):
             'competitors': competitors,
             'competitor_identification': competitor_analysis
         })
+        
+        # Save competitor identification to context for chat
+        save_analysis_context(
+            user_company=user_company,
+            competitor="__identification__",
+            analysis=competitor_analysis,
+            entities=""
+        )
 
         # refresh the page to show new state
         st.rerun()
@@ -389,6 +482,14 @@ with main_col:
                                     "competitors": competitors,
                                     "competitor_identification": competitor_analysis
                                 })
+                                
+                                # Save competitor identification to context for chat
+                                save_analysis_context(
+                                    user_company=user_company_input,
+                                    competitor="__identification__",
+                                    analysis=competitor_analysis,
+                                    entities=""
+                                )
 
                                 # Do not append the competitor list message into the chat UI;
                                 # the UI will render buttons for competitors below.
@@ -416,6 +517,22 @@ with main_col:
                                 session["selected_competitor"] = competitor
                                 session["conversation_state"] = "analyzing_competitor"
                                 st.rerun()
+                    
+                    # Display competitor descriptions (Why These Are Key Competitors section)
+                    competitor_identification = session.get("analysis_data", {}).get("competitor_identification", "")
+                    if competitor_identification:
+                        # Extract and display the "Why These Are Key Competitors" section
+                        if "## Why These Are Key Competitors" in competitor_identification:
+                            why_section = competitor_identification.split("## Why These Are Key Competitors", 1)[1]
+                            st.markdown("---")
+                            st.markdown("## Why These Are Key Competitors")
+                            st.markdown(why_section.strip())
+                        elif "Why These Are Key Competitors" in competitor_identification:
+                            # Handle variations in formatting
+                            why_section = competitor_identification.split("Why These Are Key Competitors", 1)[1]
+                            st.markdown("---")
+                            st.markdown("## Why These Are Key Competitors")
+                            st.markdown(why_section.strip())
                 else:
                     st.warning("No competitors were identified automatically. You can enter them manually below.")
                     manual = st.text_input(
@@ -570,6 +687,14 @@ Analysis State: Starting competitive intelligence analysis""")
                             "selected_competitor_analysis": raw_analysis,
                             "extracted_entities": extracted_entities
                         })
+                        
+                        # Save analysis to JSON file for chat context
+                        save_analysis_context(
+                            user_company=session["user_company"],
+                            competitor=selected_competitor,
+                            analysis=raw_analysis,
+                            entities=extracted_entities
+                        )
 
                         # Add the sanitized analysis to the chat/messages (no report title/header)
                         session["messages"].append({
@@ -689,10 +814,13 @@ with chat_col:
                         with st.spinner("Retrieving context..."):
                             graph_context = memory.get_graph_context_for_query(prompt)
                             chat_context = memory.get_chat_context()
+                            # Load saved analysis context from JSON file
+                            saved_analysis_context = get_full_analysis_context()
                     except Exception as e:
                         st.error("Error retrieving context. Using available information.")
                         graph_context = ""
                         chat_context = ""
+                        saved_analysis_context = ""
                     
                     # Initialize council members with timeouts
                     agents = {
@@ -707,11 +835,20 @@ with chat_col:
                     online_agent = financial_agents.online_research_agent()
                     tasks = []
                     
-                    # Create main task with context from knowledge graph
+                    # Create main task with context from knowledge graph AND saved analyses
+                    full_context = f"""=== SAVED COMPETITOR ANALYSES ===
+{saved_analysis_context}
+
+=== KNOWLEDGE GRAPH CONTEXT ===
+{graph_context}
+
+=== RECENT CHAT CONTEXT ===
+{chat_context}"""
+                    
                     main_task = financial_tasks.financial_chat_response_task(
                         agent=primary_agent,
                         user_question=prompt,
-                        context=f"""Knowledge Graph Context:\n{graph_context}\n\nChat History:\n{chat_context}"""
+                        context=full_context
                     )
                     tasks.append(main_task)
                     
@@ -764,7 +901,7 @@ with chat_col:
                     
                     crew_result = crew.kickoff()
                     if crew_result and crew_result.raw:
-                        response = crew_result.raw
+                        response = strip_thinking_from_response(crew_result.raw)
                     else:
                         # Fallback to simple online research if crew fails
                         fallback_crew = Crew(
@@ -773,7 +910,7 @@ with chat_col:
                             process=Process.sequential
                         )
                         fallback_result = fallback_crew.kickoff()
-                        response = fallback_result.raw if fallback_result else "I apologize, but I couldn't generate a complete analysis. Please try rephrasing your question."
+                        response = strip_thinking_from_response(fallback_result.raw) if fallback_result else "I apologize, but I couldn't generate a complete analysis. Please try rephrasing your question."
                     
                     st.markdown(response)
                     st.session_state.chat_history.append({"role": "assistant", "content": response})

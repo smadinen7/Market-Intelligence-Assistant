@@ -74,8 +74,20 @@ class CentralMemory:
             return self.get_internal_analysis().get("document_content", "")
         elif focus == "market_analysis":
             comp_intel = self.get_competitive_intelligence()
+            context_parts = []
+            
+            # Include competitor identification (why they are competitors)
+            if comp_intel.get("competitor_identification"):
+                context_parts.append("=== Competitor Identification ===")
+                context_parts.append(comp_intel.get("competitor_identification", ""))
+            
+            # Include selected competitor analysis
             if comp_intel.get("selected_competitor_analysis"):
-                return comp_intel.get("selected_competitor_analysis", "")
+                context_parts.append("\n=== Selected Competitor Analysis ===")
+                context_parts.append(comp_intel.get("selected_competitor_analysis", ""))
+            
+            if context_parts:
+                return "\n\n".join(context_parts)
             return self.get_market_analysis().get("company_analysis", "")
         return ""
 

@@ -190,17 +190,22 @@ class FinancialTasks:
                 description=f"""Answer the user's question briefly and directly.
 
 Question: {user_question}
-Context: {context}
 
-Rules for response (strict):
-1. Provide a one-line top summary (1 sentence) followed by up to 3 short bullets if needed.
-2. Do NOT use phrases like: "according to", "based on", "the data shows", or any meta-commentary about sources or process.
-3. Use present-tense, declarative statements. Keep each bullet under ~18 words.
-4. If the answer requires numbers or metrics, present only the most essential figures (no long tables).
-5. If information is not available locally, run online checks and then answer; if still missing, reply: "Information not available."
+This is the context you're working with:
+{context}
 
-Format: 1-line summary + up to 3 bullets. Total answer should be short — suitable for a CEO to read in 10 seconds.""",
-                expected_output="Very short, direct answer (1 line + up to 3 bullets).",
+Rules for response (STRICT - MUST FOLLOW):
+1. NEVER output "Thought:", "Thinking:", chain-of-thought, or any internal reasoning. Start directly with the answer.
+2. Provide a one-line top summary (1 sentence) followed by up to 3 short bullets if needed.
+3. Do NOT use phrases like: "according to", "based on", "the data shows", "the context states", or any meta-commentary about sources, process, or how you arrived at the answer.
+4. Use present-tense, declarative statements. Keep each bullet under ~18 words.
+5. If the answer requires numbers or metrics, present only the most essential figures (no long tables).
+6. If information is not available locally, run online checks and then answer; if still missing, reply: "Information not available."
+
+Format: 1-line summary + up to 3 bullets. Total answer should be short — suitable for a CEO to read in 10 seconds.
+
+IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thought:", no explanation of your reasoning process.""",
+                expected_output="Very short, direct answer (1 line + up to 3 bullets). NO 'Thought:' or reasoning shown.",
                 agent=agent
           )
 
@@ -223,7 +228,7 @@ Format: 1-line summary + up to 3 bullets. Total answer should be short — suita
 
     def identify_competitors_task(self, agent, company_name):
         return Task(
-            description=f"""Identify the top 3 direct competitors of {company_name}.
+            description=f"""Identify the top 3 direct competitors of {company_name} and explain WHY each is a competitor.
 
             Research and identify the 3 biggest direct competitors based on:
             1. Industry overlap and market segment
@@ -232,23 +237,35 @@ Format: 1-line summary + up to 3 bullets. Total answer should be short — suita
             4. Geographic presence
             5. Revenue scale and company size
 
-            IMPORTANT: For reliable downstream parsing, return ONLY a JSON array containing
-            the competitor names (strings) and nothing else. The JSON array must contain
-            up to 3 company names (strings). Do NOT include any explanatory text, headings,
-            or other content outside the JSON array.
-
-            Examples (valid outputs):
-            ["Company A", "Company B", "Company C"]
-            ["Company A"]
+            FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
+            
+            First, output a JSON array with just the competitor names on its own line:
+            ["Competitor1", "Competitor2", "Competitor3"]
+            
+            Then provide a brief explanation for each competitor:
+            
+            ## Why These Are Key Competitors
+            
+            **1. [Competitor Name]**
+            - Primary overlap: [main area of competition]
+            - Key threat: [why they threaten {company_name}]
+            
+            **2. [Competitor Name]**
+            - Primary overlap: [main area of competition]
+            - Key threat: [why they threaten {company_name}]
+            
+            **3. [Competitor Name]**
+            - Primary overlap: [main area of competition]
+            - Key threat: [why they threaten {company_name}]
 
             Company to analyze: {company_name}""",
-            expected_output='A JSON array (e.g., ["Company A","Company B","Company C"]) containing up to 3 company names only.',
+            expected_output='A JSON array followed by a "Why These Are Key Competitors" section explaining each competitor.',
             agent=agent
         )
 
     def competitive_intelligence_task(self, agent, user_company, competitor_company):
             # Produce a concise, executive-ready competitor analysis focused on recent moves, markets, hero products,
-            # financial snapshot, and explicit threats to the user's company. The output MUST be short, to-the-point,
+            # financial snapshot, threats, and strategic recommendations. The output MUST be short, to-the-point,
             # and formatted as Markdown headings so the UI can render sections clearly.
             return Task(
                 description=f"""Produce a concise, executive-ready competitor analysis for {competitor_company} vs {user_company}.
@@ -262,11 +279,24 @@ Format: 1-line summary + up to 3 bullets. Total answer should be short — suita
        - ## Hero Products & Focus
        - ## Financial Snapshot (key figures)
        - ## Direct Threats to {user_company}
+       - ## Strategic Recommendations for {user_company}
     3. Do NOT include any preamble, planning text, chain-of-thought, process notes, or meta-commentary. Provide no explanations of method.
-    4. Keep content extremely concise: bullets only where requested; adhere to limits (Recent Moves up to 6 bullets; Major Markets 3-6 items; Hero Products up to 3 short lines; Financial Snapshot up to 5 short metric lines; Direct Threats up to 6 bullets).
+    4. Keep content extremely concise: bullets only where requested; adhere to limits:
+       - Recent Moves: up to 6 bullets
+       - Major Markets: 3-6 items
+       - Hero Products: up to 3 short lines
+       - Financial Snapshot: up to 5 short metric lines
+       - Direct Threats: up to 6 bullets
+       - Strategic Recommendations: 4-6 actionable recommendations
     5. If information unavailable, use exact phrases: `Not available` (for metrics) or `No recent public news (last 6 weeks)` (for Recent Moves).
     6. Do not include source citations, URLs, or parenthetical provenance. Do not include JSON or wrappers — plain Markdown only.
     7. Output nothing else. If you cannot produce the required sections, respond with exactly: `Information not available`.
+
+    For Strategic Recommendations:
+    - Each recommendation must be a specific, actionable item {user_company} can implement
+    - Base recommendations on {competitor_company}'s recent moves and strengths
+    - Focus on: defensive moves, offensive opportunities, areas to invest, partnerships to consider
+    - Format as: "**Action:** [Brief description of what to do and why]"
 
     Notes for the agent:
     1. Use the knowledge graph and stored analysis first, then perform online checks (news and filings) to update Recent Moves.
@@ -275,7 +305,7 @@ Format: 1-line summary + up to 3 bullets. Total answer should be short — suita
 
     User's Company: {user_company}
     Competitor: {competitor_company}""",
-                expected_output="Markdown with the exact required headings (TopLine then the listed H2s) and concise bullets.",
+                expected_output="Markdown with the exact required headings (TopLine, Recent Moves, Major Markets, Hero Products, Financial Snapshot, Direct Threats, Strategic Recommendations) and concise bullets.",
                 agent=agent
             )
 
