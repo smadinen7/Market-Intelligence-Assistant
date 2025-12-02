@@ -132,20 +132,29 @@ def extract_financial_metrics(text):
     """Extract common financial metrics from text using regex patterns."""
     metrics = {}
     
-    # Common financial terms and patterns
+    # More flexible patterns that look for keywords followed by numbers (with various separators)
+    # The number can appear after colons, spaces, newlines, or be on the next line
     patterns = {
-        'revenue': r'(?:revenue|sales|net sales)[:\s]*\$?[\d,]+(?:\.\d+)?[kmb]?',
-        'profit': r'(?:net income|profit|earnings)[:\s]*\$?[\d,]+(?:\.\d+)?[kmb]?',
-        'assets': r'(?:total assets)[:\s]*\$?[\d,]+(?:\.\d+)?[kmb]?',
-        'debt': r'(?:total debt|long.term debt)[:\s]*\$?[\d,]+(?:\.\d+)?[kmb]?',
-        'cash': r'(?:cash and cash equivalents|cash)[:\s]*\$?[\d,]+(?:\.\d+)?[kmb]?',
-        'equity': r'(?:shareholders\' equity|stockholders\' equity)[:\s]*\$?[\d,]+(?:\.\d+)?[kmb]?'
+        'revenue': r'(?:revenue|total\s+revenue|net\s+sales|total\s+sales)[\s:]*?[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:million|billion|M|B)?',
+        'profit': r'(?:net\s+income|net\s+profit|total\s+profit|earnings)[\s:]*?[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:million|billion|M|B)?',
+        'assets': r'(?:total\s+assets)[\s:]*?[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:million|billion|M|B)?',
+        'debt': r'(?:total\s+debt|long[\s-]?term\s+debt|total\s+liabilities)[\s:]*?[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:million|billion|M|B)?',
+        'cash': r'(?:cash\s+and\s+cash\s+equivalents|total\s+cash|cash\s+position)[\s:]*?[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:million|billion|M|B)?',
+        'equity': r'(?:shareholders[\'\s]+equity|stockholders[\'\s]+equity|total\s+equity)[\s:]*?[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:million|billion|M|B)?'
     }
     
     for metric, pattern in patterns.items():
         matches = re.findall(pattern, text, re.IGNORECASE)
         if matches:
-            metrics[metric] = matches
+            # Clean up and filter valid numeric matches
+            cleaned_matches = []
+            for m in matches:
+                m = m.strip()
+                # Only keep if it contains digits
+                if m and re.search(r'\d', m):
+                    cleaned_matches.append(m)
+            if cleaned_matches:
+                metrics[metric] = cleaned_matches
     
     return metrics
 

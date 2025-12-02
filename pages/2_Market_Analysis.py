@@ -260,6 +260,37 @@ def run_competitor_identification(session):
 
 # (Sidebar removed — sessions are created on Home and main UI displays relevant info.)
 
+# --- Helper function to create a new session ---
+def create_new_market_session(company_name):
+    """Create a new market analysis session for the given company."""
+    session_id = str(uuid.uuid4())
+    st.session_state.current_market_session_id = session_id
+    st.session_state.market_sessions[session_id] = {
+        "title": f"Competitive Intelligence - {company_name}",
+        "session_type": "competitive",
+        "messages": [],
+        "conversation_state": "identifying_competitors",
+        "analysis_data": {},
+        "chat_history": [],
+        "user_company": company_name,
+        "competitors": [],
+        "selected_competitor": None,
+        "competitor_analyses": {},
+        "analysis_results": {},
+        "quick_metrics": {},
+        "company_insights": None
+    }
+    st.session_state["current_user_company"] = company_name
+    
+    # Add the user company to the knowledge graph
+    try:
+        kg = memory.get_knowledge_graph()
+        kg.add_company(company_name, {"is_user_company": True})
+    except Exception:
+        pass
+    
+    return session_id
+
 # --- MAIN LAYOUT ---
 main_col, chat_col = st.columns([2, 1])
 
@@ -271,7 +302,30 @@ with main_col:
         run_competitor_identification(session)
 
     if not session:
-        st.info("Go to Home and enter your company to start the competitive analysis for this session.")
+        # Show company entry form when no session exists
+        st.title("📈 Market Analysis")
+        st.markdown("---")
+        
+        st.header("Enter your company to get started")
+        st.markdown("We'll identify your top competitors and provide deep competitive intelligence.")
+        
+        with st.form(key="company_form"):
+            company_input = st.text_input(
+                "Company Name",
+                placeholder="e.g., Apple Inc., Tesla, Microsoft",
+            )
+            submitted = st.form_submit_button("🔍 Start Competitive Analysis", use_container_width=True)
+        
+        if submitted:
+            if not company_input:
+                st.error("Please enter a company name.")
+            else:
+                is_valid, clean_name = validate_company_name(company_input)
+                if not is_valid:
+                    st.error("Please enter a valid company name.")
+                else:
+                    create_new_market_session(company_input)
+                    st.rerun()
     else:
         st.title("🎯 Competitive Intelligence")
 
