@@ -11,3 +11,8 @@ __pycache__/
 
 # Streamlit
 .streamlit/
+
+# Documentation (internal/private)
+CLAUDE.md
+progress.md
+GEMINI.md

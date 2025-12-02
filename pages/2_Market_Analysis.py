@@ -65,68 +65,200 @@ def get_current_market_session():
         return st.session_state.market_sessions.get(st.session_state.current_market_session_id)
     return None
 
-def new_market_session():
-    session_id = str(uuid.uuid4())
-    st.session_state.current_market_session_id = session_id
-    
-    initial_message = "Welcome to Competitive Intelligence! Enter your company name to identify and analyze your top competitors."
-    conversation_state = "awaiting_user_company"
-    title = "Competitive Intelligence Session"
-    
-    st.session_state.market_sessions[session_id] = {
-        "title": title,
-        "session_type": "competitive",
-        "messages": [{"role": "assistant", "content": initial_message}],
-        "conversation_state": conversation_state,
-        "analysis_data": {},
-        "chat_history": [],
-        "user_company": "",
-        "competitors": [],
-        "selected_competitor": None,
-        "competitor_analyses": {},
-        "analysis_results": {},
-        "quick_metrics": {}
-    }
-    st.session_state.editing_market_session_id = None
+
+# Restore last active market session for this run if possible
+if not st.session_state.get("current_market_session_id") and st.session_state.get("market_sessions"):
+    # Try to find by user company if available
+    target_company = st.session_state.get("current_user_company")
+    if target_company:
+        for sid, sess in st.session_state.market_sessions.items():
+            try:
+                if sess.get("user_company") == target_company:
+                    st.session_state.current_market_session_id = sid
+                    break
+            except Exception:
+                continue
+    # Fallback: pick the first existing session
+    if not st.session_state.get("current_market_session_id"):
+        try:
+            first_sid = next(iter(st.session_state.market_sessions.keys()))
+            st.session_state.current_market_session_id = first_sid
+        except StopIteration:
+            pass
+
+ 
+
 
 def parse_competitors(competitor_text):
-    """Parse competitor names from the structured AI response."""
+    """Parse competitor names from the AI response.
+
+    Strategy:
+    1. Try to locate and parse a JSON array anywhere in the response.
+    2. If no JSON is found, fall back to several heuristic patterns ("**Competitor N: ...**",
+       numbered lists, bullet lists, simple left-hand name extraction).
+    3. Return up to 3 unique, trimmed names.
+    """
     import re
+    import json
+
     competitors = []
-    
-    # Try to find competitors in the format: **Competitor N: [Company Name]**
+    if not competitor_text:
+        return competitors
+
+    # 1) Try to find a JSON array anywhere in the text and parse it
+    try:
+        # Find the first balanced [...] substring (simple approach)
+        start = competitor_text.find('[')
+        if start != -1:
+            # attempt to find the corresponding closing bracket
+            end = competitor_text.find(']', start)
+            if end != -1:
+                maybe_json = competitor_text[start:end+1]
+                try:
+                    parsed = json.loads(maybe_json)
+                    if isinstance(parsed, list):
+                        names = [p.strip() for p in parsed if isinstance(p, str) and p.strip()]
+                        if names:
+                            return names[:3]
+                except Exception:
+                    pass
+        # Also try parsing the whole text as JSON (in case the model returned only the array)
+        try:
+            parsed_whole = json.loads(competitor_text)
+            if isinstance(parsed_whole, list):
+                names = [p.strip() for p in parsed_whole if isinstance(p, str) and p.strip()]
+                if names:
+                    return names[:3]
+        except Exception:
+            pass
+    except Exception:
+        # Non-fatal: move on to heuristics
+        pass
+
+    # 2) Heuristic: **Competitor N: Name** pattern
     pattern = r'\*\*Competitor \d+:\s*([^*\n]+?)\*\*'
     matches = re.findall(pattern, competitor_text)
-    
     if matches:
-        competitors = [match.strip() for match in matches[:3]]
-    
+        competitors = [m.strip() for m in matches[:3]]
+        return competitors
+
+    # 3) Heuristic: lines with bullets or numbered lists
+    lines = competitor_text.splitlines()
+    candidates = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        # remove leading list markers like '1. ', '- ', '* '
+        m = re.match(r'^(?:\d+\.\s*|[-*]\s*)(.+)$', line)
+        if m:
+            content = m.group(1)
+        else:
+            content = line
+
+        # If the line contains a delimiter (" - ", " — ", ":"), take the leftmost chunk
+        for sep in [' - ', ' — ', '\u2013', '\u2014', ':']:
+            if sep in content:
+                content = content.split(sep)[0]
+                break
+
+        # Remove parenthetical notes and trailing description
+        content = re.sub(r'\([^)]*\)', '', content).strip()
+        # Skip lines that are obviously long prose
+        if len(content) > 120:
+            continue
+        candidates.append(content)
+
+    # Deduplicate while preserving order
+    seen = set()
+    for c in candidates:
+        if c and c not in seen:
+            seen.add(c)
+            competitors.append(c)
+            if len(competitors) >= 3:
+                break
+
     return competitors
+
+
+def sanitize_competitor_output(text: str) -> str:
+    """Return the user-facing portion of an analysis output.
+
+    Tries to find the formal analysis start (TopLine: or first Markdown heading '##')
+    and returns the substring from there. If not found, returns the original text.
+    """
+    import re
+    if not text:
+        return ""
+    # Look for TopLine: or a markdown heading
+    m = re.search(r'(TopLine:|^##\s)', text, flags=re.IGNORECASE | re.MULTILINE)
+    if m:
+        return text[m.start():].strip()
+    # Fallback: find the first markdown H2 anywhere
+    m2 = re.search(r'\n##\s', text)
+    if m2:
+        return text[m2.start()+1:].strip()
+    # Fallback: remove leading planner paragraphs until first blank line
+    parts = text.split('\n\n', 1)
+    if len(parts) > 1:
+        return parts[1].strip()
+    return text.strip()
 
 # --- AGENT & TASK DEFINITIONS ---
 financial_agents = FinancialAgents()
 financial_tasks = FinancialTasks()
 
-# --- SIDEBAR: SESSION MANAGEMENT ---
-with st.sidebar:
-    st.title("📈 Competitive Intelligence")
-    st.markdown("Analyze Your Competition")
 
-    if st.button("🔍 New Competitive Analysis", use_container_width=True, type="primary"):
-        new_market_session()
+def run_competitor_identification(session):
+    """Run competitor identification for a session that was created on the Home page.
+    This function performs the same identification flow as the UI button, but is
+    safe to call on page load so the work starts as soon as the user submitted on Home.
+    """
+    user_company = session.get("user_company")
+    if not user_company:
+        return
+
+    try:
+        competitor_agent = financial_agents.competitor_identification_agent()
+        competitor_task = financial_tasks.identify_competitors_task(competitor_agent, user_company)
+        crew = Crew(agents=[competitor_agent], tasks=[competitor_task], process=Process.sequential)
+        competitor_analysis = crew.kickoff().raw
+
+        # Raw AI output (keep for records) and parse competitor names
+        competitors = parse_competitors(competitor_analysis)
+
+        # We don't append a verbose list message to the chat UI; the UI will render
+        # buttons for each competitor. Keep raw output in analysis_data for records.
+
+        # populate knowledge graph
+        kg = memory.get_knowledge_graph()
+        kg.add_company(user_company, {'is_user_company': True})
+        for competitor in competitors:
+            kg.add_company(competitor, {'is_competitor': True})
+            kg.add_relationship(user_company, competitor, 'competes_with', {
+                'identified_at': datetime.now().isoformat()
+            })
+
+        session['competitors'] = competitors
+        session['analysis_data']['competitor_identification'] = competitor_analysis
+        session['conversation_state'] = 'competitors_identified'
+        # Do not append the competitor list to session messages — buttons are shown below.
+
+        memory.update_competitive_intelligence({
+            'user_company': user_company,
+            'competitors': competitors,
+            'competitor_identification': competitor_analysis
+        })
+
+        # refresh the page to show new state
         st.rerun()
-    
-    # Show user company and competitors if available
-    session = get_current_market_session()
-    if session and session.get("user_company"):
-        st.divider()
-        st.subheader("Your Company")
-        st.write(f"**{session['user_company']}**")
-        
-        if session.get("competitors"):
-            st.subheader("Identified Competitors")
-            for idx, comp in enumerate(session["competitors"], 1):
-                st.write(f"{idx}. {comp}")
+    except Exception as e:
+        # Surface error to UI and keep session in identifying state
+        st.error(f"Error identifying competitors: {e}")
+        session['conversation_state'] = 'awaiting_user_company'
+        return
+
+# (Sidebar removed — sessions are created on Home and main UI displays relevant info.)
 
 # --- MAIN LAYOUT ---
 main_col, chat_col = st.columns([2, 1])
@@ -134,30 +266,20 @@ main_col, chat_col = st.columns([2, 1])
 with main_col:
     session = get_current_market_session()
 
+    # If this session was created on Home and marked as identifying, start identification now
+    if session and session.get('conversation_state') == 'identifying_competitors' and not session.get('competitors'):
+        run_competitor_identification(session)
+
     if not session:
-        st.info("Start a new competitive intelligence session from the sidebar to identify and analyze your competitors.")
+        st.info("Go to Home and enter your company to start the competitive analysis for this session.")
     else:
         st.title("🎯 Competitive Intelligence")
 
         analysis_tab, competitor_tab = st.tabs(["📊 Competitor Identification", "🔍 Detailed Analysis"])
 
         with analysis_tab:
-            st.header("Competitive Landscape Analysis")
-            
-            # Progress indicator
+            # (Removed the page section title and progress bar per UX request.)
             state = session.get("conversation_state", "start")
-            if state == "awaiting_user_company":
-                progress_value = 0.25
-            elif state == "identifying_competitors":
-                progress_value = 0.5
-            elif state == "competitors_identified":
-                progress_value = 0.75
-            elif state == "competitor_selected":
-                progress_value = 1.0
-            else:
-                progress_value = 0.1
-            
-            st.progress(progress_value)
             
             # Display conversation messages
             for message in session.get("messages", []):
@@ -186,10 +308,17 @@ with main_col:
                                 competitor_task = financial_tasks.identify_competitors_task(competitor_agent, user_company_input)
                                 crew = Crew(agents=[competitor_agent], tasks=[competitor_task], process=Process.sequential)
                                 competitor_analysis = crew.kickoff().raw
-                                
+
                                 # Parse competitor names
                                 competitors = parse_competitors(competitor_analysis)
-                                
+
+                                # Create concise UI-friendly summary
+                                if competitors:
+                                    concise_list = "\n".join([f"{i+1}. {c}" for i, c in enumerate(competitors)])
+                                    assistant_msg = f"I've identified the top {len(competitors)} competitors for {user_company_input}:\n\n{concise_list}\n\nClick on a competitor below to get detailed competitive intelligence."
+                                else:
+                                    assistant_msg = f"I could not extract clear competitor names for {user_company_input}."
+
                                 # Build knowledge graph - add user company and competitors
                                 kg = memory.get_knowledge_graph()
                                 kg.add_company(user_company_input, {'is_user_company': True})
@@ -198,7 +327,7 @@ with main_col:
                                     kg.add_relationship(user_company_input, competitor, 'competes_with', {
                                         'identified_at': datetime.now().isoformat()
                                     })
-                                
+
                                 session["competitors"] = competitors
                                 session["analysis_data"]["competitor_identification"] = competitor_analysis
                                 memory.update_competitive_intelligence({
@@ -206,11 +335,9 @@ with main_col:
                                     "competitors": competitors,
                                     "competitor_identification": competitor_analysis
                                 })
-                                
-                                session["messages"].append({
-                                    "role": "assistant", 
-                                    "content": f"I've identified the top 3 competitors for {user_company_input}:\n\n{competitor_analysis}\n\nClick on a competitor below to get detailed competitive intelligence."
-                                })
+
+                                # Do not append the competitor list message into the chat UI;
+                                # the UI will render buttons for competitors below.
                                 session["conversation_state"] = "competitors_identified"
                                 session["title"] = f"Competitive Intelligence - {user_company_input}"
                                 
@@ -236,7 +363,36 @@ with main_col:
                                 session["conversation_state"] = "analyzing_competitor"
                                 st.rerun()
                 else:
-                    st.warning("No competitors were identified. Please try again.")
+                    st.warning("No competitors were identified automatically. You can enter them manually below.")
+                    manual = st.text_input(
+                        "Enter up to 3 competitor names, comma-separated:",
+                        key=f"manual_competitors_{session.get('id','')}")
+                    if st.button("Save competitors", key="save_manual_competitors"):
+                        names = [n.strip() for n in manual.split(",") if n.strip()]
+                        if names:
+                            session['competitors'] = names[:3]
+                            # Update knowledge graph and memory
+                            kg = memory.get_knowledge_graph()
+                            kg.add_company(session['user_company'], {'is_user_company': True})
+                            for competitor in session['competitors']:
+                                kg.add_company(competitor, {'is_competitor': True})
+                                kg.add_relationship(session['user_company'], competitor, 'competes_with', {
+                                    'identified_at': datetime.now().isoformat()
+                                })
+
+                            # Record manual override
+                            session['analysis_data']['competitor_identification_manual'] = manual
+                            memory.update_competitive_intelligence({
+                                'user_company': session['user_company'],
+                                'competitors': session['competitors'],
+                                'competitor_identification': session['analysis_data'].get('competitor_identification', '') + '\n\nManual override:\n' + manual
+                            })
+
+                            session['conversation_state'] = 'competitors_identified'
+                            st.success('Saved competitors. Select one to analyze.')
+                            st.rerun()
+                        else:
+                            st.error('Please enter at least one competitor name.')
 
             # State 3: Analyzing selected competitor
             elif state == "analyzing_competitor":
@@ -346,24 +502,25 @@ Analysis State: Starting competitive intelligence analysis""")
                         progress_container.progress(0.9)
                         
                         # Update session and memory
-                        session["competitor_analyses"][selected_competitor] = competitive_analysis
-                        session["analysis_data"]["current_competitor_analysis"] = competitive_analysis
+                        raw_analysis = competitive_analysis
+                        # Sanitize display output to remove any leading planner/meta-text and
+                        # ensure the UI shows only the formal analysis sections.
+                        sanitized = sanitize_competitor_output(raw_analysis) or raw_analysis
+
+                        session["competitor_analyses"][selected_competitor] = sanitized
+                        session["analysis_data"]["current_competitor_analysis"] = raw_analysis
                         session["analysis_data"]["extracted_entities"] = extracted_entities
-                        
+
                         memory.update_competitive_intelligence({
                             "selected_competitor": selected_competitor,
-                            "selected_competitor_analysis": competitive_analysis,
+                            "selected_competitor_analysis": raw_analysis,
                             "extracted_entities": extracted_entities
                         })
-                        
-                        # Add message to chat with improved formatting
+
+                        # Add the sanitized analysis to the chat/messages (no report title/header)
                         session["messages"].append({
                             "role": "assistant",
-                            "content": f"""## Competitive Intelligence Report: {selected_competitor}
-
-{competitive_analysis}
-
-*Analysis completed successfully. View detailed information in the 'Detailed Analysis' tab.*"""
+                            "content": sanitized
                         })
                         
                         # Update state and display completion

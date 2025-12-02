@@ -192,3 +192,33 @@ def format_financial_number(value, format_type="auto"):
     
     except (ValueError, TypeError):
         return str(value)
+
+def safe_rerun():
+    """Compatibility helper for Streamlit rerun across versions.
+
+    Tries `st.experimental_rerun()` first, falls back to `st.rerun()` if available.
+    If neither exists, sets a session flag so the UI can respond gracefully.
+    """
+    try:
+        import streamlit as st
+        if hasattr(st, "experimental_rerun"):
+            try:
+                st.experimental_rerun()
+                return
+            except Exception:
+                pass
+        if hasattr(st, "rerun"):
+            try:
+                st.rerun()
+                return
+            except Exception:
+                pass
+        # Final fallback: toggle a session flag that pages can observe.
+        try:
+            st.session_state["__rerun_requested__"] = not st.session_state.get("__rerun_requested__", False)
+        except Exception:
+            # If session state isn't available, do nothing.
+            pass
+    except Exception:
+        # If Streamlit import fails for some reason, silently ignore.
+        return

@@ -241,3 +241,18 @@ class FinancialAgents:
             verbose=False,
             allow_delegation=False
         )
+
+    def company_insights_synthesis_agent(self):
+        return Agent(
+            role='Company Insights Synthesis Agent',
+            goal="Synthesize expert outputs into a short list of actionable, implementable insights for the company.",
+            backstory=(
+                "You are a pragmatic strategy synthesizer. Your job is to convert research outputs into a prioritized, "
+                "actionable list of items the company can implement or investigate. Each insight must be concrete, "
+                "operationally relevant, and written as a short directive or suggested action. Avoid stating facts that "
+                "aren't directly actionable."
+            ),
+            llm=gemini_llm,
+            verbose=False,
+            allow_delegation=False
+        )

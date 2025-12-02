@@ -85,18 +85,20 @@ def new_internal_session():
     }
     st.session_state.editing_internal_session_id = None
 
+
+# Restore last active internal session for this run if possible
+if not st.session_state.get("current_internal_session_id") and st.session_state.get("internal_sessions"):
+    try:
+        first_sid = next(iter(st.session_state.internal_sessions.keys()))
+        st.session_state.current_internal_session_id = first_sid
+    except StopIteration:
+        pass
+
 # --- AGENT & TASK DEFINITIONS ---
 financial_agents = FinancialAgents()
 financial_tasks = FinancialTasks()
 
-# --- SIDEBAR: SESSION MANAGEMENT ---
-with st.sidebar:
-    st.title("📄 Internal Analysis")
-    st.markdown("Analyze your internal financial documents.")
-
-    if st.button("📄 Analyze Document", use_container_width=True, type="primary"):
-        new_internal_session()
-        st.rerun()
+# Sidebar removed per user request; pages rely on top tabs and Home for session creation.
 
 # --- MAIN LAYOUT ---
 main_col, chat_col = st.columns([2, 1])
