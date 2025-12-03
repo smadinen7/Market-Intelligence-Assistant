@@ -187,7 +187,7 @@ class FinancialTasks:
 
     def financial_chat_response_task(self, agent, user_question, context=""):
           return Task(
-                description=f"""Answer the user's question briefly and directly.
+                description=f"""Answer the user's question thoroughly and directly.
 
 Question: {user_question}
 
@@ -206,19 +206,26 @@ QUESTION INTERPRETATION:
 - If user asks "what", "how", "why" about a strategy/recommendation - provide implementation guidance
 - "First", "most important", "priority", "start with" = asking for prioritized recommendations, NOT the first competitor in the list
 
-Rules for response (STRICT - MUST FOLLOW):
-1. NEVER output "Thought:", "Thinking:", chain-of-thought, or any internal reasoning. Start directly with the answer.
-2. If the question is about a RECOMMENDATION from the analysis, provide implementation guidance, feasibility assessment, or elaboration on the strategy - do NOT search for it as news.
-3. If the question is about REAL competitor actions or market data, use web search to find current information.
-4. When asked about "first thing to do" or "priority" - extract and explain the MOST IMPORTANT strategic recommendation, not competitor details.
-5. Provide a one-line top summary (1 sentence) followed by up to 5 short bullets if needed.
-6. Do NOT use phrases like: "according to", "based on", "the data shows", "the context states", or any meta-commentary.
-7. Use present-tense, declarative statements.
+CRITICAL OUTPUT FORMAT RULES (VIOLATING THESE IS A FAILURE):
+1. Your FIRST CHARACTER must be the start of the actual answer. NO exceptions.
+2. FORBIDDEN phrases at the start: "The user", "I need to", "I will", "I should", "Let me", "This is", "The question", "Looking at", "Based on", "According to", "The relevant", "I'll structure"
+3. FORBIDDEN anywhere: "Thought:", "Thinking:", "chain-of-thought", any meta-commentary about your reasoning
+4. START with a direct statement answering the question. Example: "Reinforcing privacy as a competitive advantage requires..."
+5. If the question is about a RECOMMENDATION, provide detailed implementation guidance - do NOT search for it as news.
+6. Provide a comprehensive response: 1-2 line summary + 5-8 detailed bullets with implementation steps.
+7. Use present-tense, declarative statements. Be actionable and specific.
 
-Format: 1-line summary + supporting bullets. Keep it concise but complete.
+WRONG OUTPUT EXAMPLE (DO NOT DO THIS):
+"The user is asking for... I need to elaborate... The relevant section..."
 
-IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thought:", no explanation of your reasoning process.""",
-                expected_output="Direct answer that understands the difference between recommendations (suggestions) and real news/products. NO 'Thought:' or reasoning shown.",
+CORRECT OUTPUT EXAMPLE:
+"Reinforcing privacy as a competitive advantage requires a multi-faceted approach:
+- Launch comprehensive marketing campaigns emphasizing on-device AI processing
+- Develop clear privacy certifications for all AI features
+..."
+
+Your response must be ONLY the final answer with no preamble or reasoning.""",
+                expected_output="Direct answer starting with the actual content. NO 'The user is asking', NO 'I need to', NO reasoning shown. Just the answer.",
                 agent=agent
           )
 
@@ -280,11 +287,11 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
         )
 
     def competitive_intelligence_task(self, agent, user_company, competitor_company):
-            # Produce a concise, executive-ready competitor analysis focused on recent moves, markets, hero products,
-            # financial snapshot, threats, and strategic recommendations. The output MUST be short, to-the-point,
+            # Produce a comprehensive, executive-ready competitor analysis focused on recent moves, markets, hero products,
+            # financial snapshot, threats, and strategic recommendations. The output should be detailed yet structured,
             # and formatted as Markdown headings so the UI can render sections clearly.
             return Task(
-                description=f"""Produce a concise, executive-ready competitor analysis for {competitor_company} vs {user_company}.
+                description=f"""Produce a comprehensive, executive-ready competitor analysis for {competitor_company} vs {user_company}.
 
     IMPORTANT: You MUST use the web search tool to get CURRENT 2024/2025 data. Do NOT rely on training data.
     - Search for "{competitor_company} Q3 2024 earnings" or "{competitor_company} 2024 annual report" for financials
@@ -302,13 +309,13 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
        - ## Direct Threats to {user_company}
        - ## Strategic Recommendations for {user_company}
     3. Do NOT include any preamble, planning text, chain-of-thought, process notes, or meta-commentary. Provide no explanations of method.
-    4. Keep content extremely concise: bullets only where requested; adhere to limits:
-       - Recent Moves: up to 6 bullets
-       - Major Markets: 3-6 items
-       - Hero Products: up to 3 short lines
-       - Financial Snapshot: up to 5 short metric lines (use FY2024 or latest available - NOT 2023)
-       - Direct Threats: up to 6 bullets
-       - Strategic Recommendations: 4-6 actionable recommendations
+    4. Provide detailed content with specific facts and figures. Content limits:
+       - Recent Moves: 6-10 bullets with specific details (dates, amounts, partner names where available)
+       - Major Markets: 4-8 items with market size or share data if available
+       - Hero Products: 4-6 lines covering key products/services with brief competitive positioning
+       - Financial Snapshot: 6-8 metric lines including revenue, profit, growth rates, market cap (use FY2024 or latest available - NOT 2023)
+       - Direct Threats: 6-10 bullets explaining specific competitive threats with impact assessment
+       - Strategic Recommendations: 6-8 actionable recommendations with priority levels
     5. If current 2024/2025 information unavailable after searching, use exact phrases: `Not available` (for metrics) or `No recent public news (last 6 weeks)` (for Recent Moves).
     6. Do not include source citations, URLs, or parenthetical provenance. Do not include JSON or wrappers — plain Markdown only.
     7. Output nothing else. If you cannot produce the required sections, respond with exactly: `Information not available`.
@@ -317,13 +324,20 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
     - Each recommendation must be a specific, actionable item {user_company} can implement
     - Base recommendations on {competitor_company}'s recent moves and strengths
     - Focus on: defensive moves, offensive opportunities, areas to invest, partnerships to consider
-    - Format as: "**Action:** [Brief description of what to do and why]"
+    - Include priority level: **[HIGH/MEDIUM/LOW PRIORITY]** before each recommendation
+    - Format EACH recommendation as a bullet with this EXACT structure:
+      * **[PRIORITY]** Brief title
+        
+        **Action:** What to do and how to do it
+        
+        **Impact:** Expected business impact and benefits
 
     CRITICAL: Use web search tool FIRST before answering. Do NOT use 2023 data - search for 2024/2025 figures.
+    IMPORTANT: Be thorough and detailed. Executives want comprehensive intelligence, not just summaries.
 
     User's Company: {user_company}
     Competitor: {competitor_company}""",
-                expected_output="Markdown with the exact required headings (TopLine, Recent Moves, Major Markets, Hero Products, Financial Snapshot, Direct Threats, Strategic Recommendations) and concise bullets. All financial data must be from 2024 or latest available.",
+                expected_output="Detailed Markdown with the exact required headings (TopLine, Recent Moves, Major Markets, Hero Products, Financial Snapshot, Direct Threats, Strategic Recommendations) and comprehensive bullets with specific facts. All financial data must be from 2024 or latest available.",
                 agent=agent
             )
 
@@ -371,7 +385,7 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
 
     def online_research_task(self, agent, query, company_name="", context=""):
         return Task(
-                description=f"""Research the query online and provide concise, up-to-date findings.
+                description=f"""Research the query online and provide detailed, up-to-date findings.
 
 Query: {query}
 Company Context: {company_name}
@@ -379,15 +393,17 @@ Additional Context: {context}
 
 Instructions:
 1. Prioritize news and developments from the LAST 6 WEEKS. If none, explicitly say: "No recent public news (last 6 weeks)".
-2. Focus on short, factual bullets. Output must be concise — executives only.
+2. Provide comprehensive, factual bullets with specific details (dates, figures, names).
 3. If researching a company, return sections (Markdown headings):
-    - Recent News (last 6 weeks): up to 6 bullets
-    - Immediate Market Impact: 1-3 bullets
-    - Quick Financial Signals (if available): 1-3 bullets or "Not available"
+    - Recent News (last 6 weeks): 6-10 bullets with specific details
+    - Immediate Market Impact: 3-5 bullets explaining implications
+    - Quick Financial Signals (if available): 3-5 bullets with specific numbers or "Not available"
+    - Key Takeaways: 2-3 bullets summarizing most important points
 4. Do NOT include source citations or meta-commentary. Use present-tense declarative bullets.
+5. Include specific numbers, percentages, and dates where available.
 
-Format: Markdown headings and short bullets. Keep total output under ~150 words where possible.""",
-                expected_output="Concise, news-focused markdown summary (last 6 weeks prioritized).",
+Format: Markdown headings and detailed bullets. Aim for comprehensive coverage while staying factual.""",
+                expected_output="Detailed, news-focused markdown summary with specific facts and figures (last 6 weeks prioritized).",
                 agent=agent
           )
 

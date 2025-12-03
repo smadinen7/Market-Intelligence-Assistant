@@ -13,13 +13,36 @@ from datetime import datetime
 # Load environment variables
 load_dotenv()
 
+def escape_dollars_for_markdown(text: str) -> str:
+    """Escape dollar signs followed by numbers to prevent LaTeX rendering.
+    
+    Streamlit's markdown interprets $X as LaTeX math. This escapes $ signs
+    that are followed by digits (e.g., $245.1B becomes \\$245.1B).
+    """
+    if not text:
+        return text
+    # Escape $ followed by a digit (currency amounts like $245.1B)
+    return re.sub(r'\$(\d)', r'\\$\1', text)
+
 def strip_thinking_from_response(response: str) -> str:
     """Remove any 'Thought:' or chain-of-thought reasoning from LLM responses."""
     if not response:
         return response
     
-    # If response starts with "Thought:" or "Thinking:", find where actual answer begins
-    if response.strip().startswith('Thought:') or response.strip().startswith('Thinking:'):
+    # Patterns that indicate reasoning/thinking preamble
+    reasoning_patterns = [
+        'Thought:', 'Thinking:', 'The user is asking', 'The user wants',
+        'I need to', 'I will', 'I should', 'Let me', 'My task',
+        'I have', 'The provided', 'The context', 'The core',
+        'Looking at', 'Based on', 'According to', 'The relevant',
+        "I'll structure", 'The question', 'This is a', 'I can see'
+    ]
+    
+    # Check if response starts with any reasoning pattern
+    stripped_response = response.strip()
+    starts_with_reasoning = any(stripped_response.startswith(p) for p in reasoning_patterns)
+    
+    if starts_with_reasoning:
         lines = response.split('\n')
         answer_start_idx = 0
         
@@ -28,13 +51,9 @@ def strip_thinking_from_response(response: str) -> str:
             # Skip empty lines and lines that are clearly reasoning
             if not stripped:
                 continue
-            if stripped.startswith('Thought:') or stripped.startswith('Thinking:'):
-                continue
-            if stripped.startswith('My task') or stripped.startswith('I have') or stripped.startswith('I will') or stripped.startswith('I need'):
-                continue
-            if stripped.startswith('The provided') or stripped.startswith('The context') or stripped.startswith('The core'):
-                continue
-            if stripped.startswith('Looking at') or stripped.startswith('Based on') or stripped.startswith('According to'):
+            # Check if this line starts with any reasoning pattern
+            is_reasoning_line = any(stripped.startswith(p) for p in reasoning_patterns)
+            if is_reasoning_line:
                 continue
             # This looks like actual content - not a reasoning line
             if len(stripped) > 10 and not stripped.endswith(':'):
@@ -45,6 +64,34 @@ def strip_thinking_from_response(response: str) -> str:
         return '\n'.join(lines[answer_start_idx:]).strip()
     
     return response
+
+def format_recommendation_response(response: str) -> str:
+    """Format recommendation responses to have Action/Impact on separate lines."""
+    if not response:
+        return response
+    
+    # Fix cases where Action: and Impact: are on the same line
+    # Pattern: "... Action: ... Impact: ..." should become "...\n\n**Action:** ...\n\n**Impact:** ..."
+    
+    # First, handle the priority header if inline
+    formatted = response
+    
+    # Add line breaks before Action: if it follows text on same line
+    formatted = re.sub(r'(\S)\s+Action:', r'\1\n\n**Action:**', formatted)
+    # Add line breaks before Impact: if it follows text on same line  
+    formatted = re.sub(r'(\S)\s+Impact:', r'\1\n\n**Impact:**', formatted)
+    
+    # Also handle if Action/Impact already have ** but no line break
+    formatted = re.sub(r'(\S)\s+\*\*Action:\*\*', r'\1\n\n**Action:**', formatted)
+    formatted = re.sub(r'(\S)\s+\*\*Impact:\*\*', r'\1\n\n**Impact:**', formatted)
+    
+    # Ensure bullet points are on new lines
+    formatted = re.sub(r'(\S)\s+(-\s)', r'\1\n\n\2', formatted)
+    
+    # Clean up any excessive newlines (more than 2)
+    formatted = re.sub(r'\n{4,}', '\n\n', formatted)
+    
+    return formatted
 
 # --- ANALYSIS CONTEXT (stored in session state for Streamlit Cloud compatibility) ---
 def save_analysis_context(user_company: str, competitor: str, analysis: str, entities: str = ""):
@@ -437,7 +484,7 @@ with main_col:
             # Display conversation messages
             for message in session.get("messages", []):
                 with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+                    st.markdown(escape_dollars_for_markdown(message["content"]))
 
             # State 1: Awaiting user's company
             if state == "awaiting_user_company":
@@ -532,13 +579,13 @@ with main_col:
                             why_section = competitor_identification.split("## Why These Are Key Competitors", 1)[1]
                             st.markdown("---")
                             st.markdown("## Why These Are Key Competitors")
-                            st.markdown(why_section.strip())
+                            st.markdown(escape_dollars_for_markdown(why_section.strip()))
                         elif "Why These Are Key Competitors" in competitor_identification:
                             # Handle variations in formatting
                             why_section = competitor_identification.split("Why These Are Key Competitors", 1)[1]
                             st.markdown("---")
                             st.markdown("## Why These Are Key Competitors")
-                            st.markdown(why_section.strip())
+                            st.markdown(escape_dollars_for_markdown(why_section.strip()))
                 else:
                     st.warning("No competitors were identified automatically. You can enter them manually below.")
                     manual = st.text_input(
@@ -788,12 +835,12 @@ Analysis State: Starting competitive intelligence analysis""")
                 analyzed_competitors = list(session["competitor_analyses"].keys())
                 
                 if len(analyzed_competitors) == 1:
-                    st.markdown(session["competitor_analyses"][analyzed_competitors[0]])
+                    st.markdown(escape_dollars_for_markdown(session["competitor_analyses"][analyzed_competitors[0]]))
                 else:
                     competitor_tabs = st.tabs(analyzed_competitors)
                     for idx, competitor in enumerate(analyzed_competitors):
                         with competitor_tabs[idx]:
-                            st.markdown(session["competitor_analyses"][competitor])
+                            st.markdown(escape_dollars_for_markdown(session["competitor_analyses"][competitor]))
             else:
                 st.info("Select and analyze a competitor from the 'Competitor Identification' tab to view detailed intelligence here.")
 
@@ -803,7 +850,8 @@ with chat_col:
     # Display chat history
     for chat in st.session_state.chat_history:
         with st.chat_message(chat["role"]):
-            st.markdown(chat["content"])
+            formatted_content = format_recommendation_response(chat["content"]) if chat["role"] == "assistant" else chat["content"]
+            st.markdown(escape_dollars_for_markdown(formatted_content))
 
     # Chat input
     if prompt := st.chat_input("Ask about competitive analysis..."):
@@ -937,9 +985,11 @@ with chat_col:
                         fallback_result = fallback_crew.kickoff()
                         response = strip_thinking_from_response(fallback_result.raw) if fallback_result else "I apologize, but I couldn't generate a complete analysis. Please try rephrasing your question."
                     
-                    st.markdown(response)
-                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+                    # Format recommendation responses with proper line breaks
+                    formatted_response = format_recommendation_response(response)
+                    st.markdown(escape_dollars_for_markdown(formatted_response))
+                    st.session_state.chat_history.append({"role": "assistant", "content": formatted_response})
                 except Exception as e:
                     error_msg = f"Sorry, I encountered an error: {e}"
-                    st.markdown(error_msg)
+                    st.markdown(escape_dollars_for_markdown(error_msg))
                     st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
