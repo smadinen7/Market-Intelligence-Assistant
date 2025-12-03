@@ -20,6 +20,48 @@ def escape_dollars_for_markdown(text: str) -> str:
     # Escape $ that precedes a digit (currency values) to prevent LaTeX interpretation
     return re.sub(r'\$(\d)', r'\\$\1', text)
 
+def get_internal_analysis_context(session: dict) -> str:
+    """Build a comprehensive context from all internal analysis results.
+    
+    This includes document content, quick summary, ratio analysis, and risk analysis
+    to provide full context for follow-up chat questions.
+    """
+    context_parts = []
+    
+    # Include document content (truncated if too long)
+    doc_content = session.get("document_content", "")
+    if doc_content:
+        # Truncate if too long to avoid token limits
+        if len(doc_content) > 10000:
+            doc_content = doc_content[:10000] + "\n\n[Document truncated for context...]"
+        context_parts.append("=== ORIGINAL DOCUMENT CONTENT ===")
+        context_parts.append(doc_content)
+    
+    # Include analysis results
+    analysis_data = session.get("analysis_data", {})
+    
+    if analysis_data.get("quick_summary"):
+        context_parts.append("\n\n=== QUICK FINANCIAL SUMMARY ===")
+        context_parts.append(analysis_data["quick_summary"])
+    
+    if analysis_data.get("ratio_analysis"):
+        context_parts.append("\n\n=== FINANCIAL RATIO ANALYSIS ===")
+        context_parts.append(analysis_data["ratio_analysis"])
+    
+    if analysis_data.get("risk_analysis"):
+        context_parts.append("\n\n=== RISK ASSESSMENT ===")
+        context_parts.append(analysis_data["risk_analysis"])
+    
+    # Include previous chat Q&A for continuity
+    chat_history = session.get("chat_history", [])
+    if chat_history:
+        context_parts.append("\n\n=== PREVIOUS CHAT Q&A ===")
+        for chat in chat_history[-6:]:  # Last 6 messages (3 Q&A pairs)
+            role = "User" if chat["role"] == "user" else "Assistant"
+            context_parts.append(f"{role}: {chat['content']}")
+    
+    return "\n".join(context_parts)
+
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="CEO AI Assistant - Internal Analysis", page_icon="📄", layout="wide")
 
@@ -270,8 +312,8 @@ else:
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing your question..."):
                     try:
-                        # Get AI response
-                        context = memory.get_chat_context()
+                        # Build comprehensive context from all analysis results
+                        context = get_internal_analysis_context(session)
                         chat_agent = financial_agents.financial_document_analyzer_agent()
                         chat_task = financial_tasks.financial_chat_response_task(chat_agent, prompt, context)
                         crew = Crew(agents=[chat_agent], tasks=[chat_task], process=Process.sequential)
