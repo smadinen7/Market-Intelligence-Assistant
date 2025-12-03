@@ -6,10 +6,19 @@ from financial_agents import FinancialAgents
 from financial_tasks import FinancialTasks
 from utils import process_financial_documents, get_memory
 import uuid
+import re
 from datetime import datetime
 
 # Load environment variables
 load_dotenv()
+
+def escape_dollars_for_markdown(text: str) -> str:
+    """Escape $ signs in text to prevent Streamlit markdown from rendering them as LaTeX.
+    This fixes the issue where $245.1B gets rendered as broken math equations."""
+    if not text:
+        return text
+    # Escape $ that precedes a digit (currency values) to prevent LaTeX interpretation
+    return re.sub(r'\$(\d)', r'\\$\1', text)
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="CEO AI Assistant - Internal Analysis", page_icon="📄", layout="wide")
@@ -154,7 +163,7 @@ else:
             # Display conversation messages
             for message in session.get("messages", []):
                 with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+                    st.markdown(escape_dollars_for_markdown(message["content"]))
 
             if state == "analysis_complete":
                 st.success("✅ Analysis complete! Use the tabs above to explore detailed insights, metrics, and AI chat.")
@@ -230,11 +239,11 @@ else:
                 # Display generated analyses
                 if "ratio_analysis" in session["analysis_data"]:
                     with st.expander("📊 Financial Ratio Analysis", expanded=True):
-                        st.markdown(session["analysis_data"]["ratio_analysis"])
+                        st.markdown(escape_dollars_for_markdown(session["analysis_data"]["ratio_analysis"]))
 
                 if "risk_analysis" in session["analysis_data"]:
                     with st.expander("⚠️ Risk Assessment", expanded=True):
-                        st.markdown(session["analysis_data"]["risk_analysis"])
+                        st.markdown(escape_dollars_for_markdown(session["analysis_data"]["risk_analysis"]))
 
             else:
                 st.info("Complete an analysis first to view financial metrics.")
@@ -248,7 +257,7 @@ else:
         # Display chat history
         for chat in chat_history:
             with st.chat_message(chat["role"]):
-                st.markdown(chat["content"])
+                st.markdown(escape_dollars_for_markdown(chat["content"]))
 
         # Chat input
         if prompt := st.chat_input("Ask a question about the analysis..."):
@@ -268,7 +277,7 @@ else:
                         crew = Crew(agents=[chat_agent], tasks=[chat_task], process=Process.sequential)
                         response = crew.kickoff().raw
                         
-                        st.markdown(response)
+                        st.markdown(escape_dollars_for_markdown(response))
                         chat_history.append({"role": "assistant", "content": response})
                         session["chat_history"] = chat_history
                     except Exception as e:
