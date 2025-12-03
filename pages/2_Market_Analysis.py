@@ -802,34 +802,8 @@ Analysis State: Starting competitive intelligence analysis""")
             st.header("🔍 Detailed Competitive Intelligence")
             
             if session.get("competitor_analyses"):
-                # Show knowledge graph visualization
-                with st.expander("🌐 Knowledge Graph Visualization", expanded=False):
-                    kg = memory.get_knowledge_graph()
-                    
-                    # Only show visualization if there are nodes
-                    if kg.graph.number_of_nodes() > 0:
-                        try:
-                            fig = kg.visualize_graph()
-                            st.plotly_chart(fig, use_container_width=True)
-                        except Exception as e:
-                            st.warning(f"Could not generate visualization: {e}")
-                    else:
-                        st.info("No entities in knowledge graph yet.")
-                    
-                    st.divider()
-                    st.markdown(kg.get_graph_summary())
-                    
-                    # Show graph statistics
-                    stats = kg.export_graph_data()['stats']
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.metric("Companies", stats['companies'])
-                    with col2:
-                        st.metric("Products", stats['products'])
-                    with col3:
-                        st.metric("Markets", stats['markets'])
-                    with col4:
-                        st.metric("Relationships", stats['total_edges'])
+                # Knowledge graph visualization hidden from frontend
+                # The knowledge graph is still maintained in the backend for context
                 
                 # Show tabs for each analyzed competitor
                 analyzed_competitors = list(session["competitor_analyses"].keys())
