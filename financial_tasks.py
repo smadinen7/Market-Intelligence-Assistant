@@ -191,21 +191,34 @@ class FinancialTasks:
 
 Question: {user_question}
 
-This is the context you're working with:
+This is the context you're working with (includes prior competitor analyses and strategic recommendations):
 {context}
+
+IMPORTANT CONTEXT UNDERSTANDING:
+- The context contains COMPETITOR ANALYSES with sections like "Strategic Recommendations for [Company]"
+- Strategic Recommendations are SUGGESTIONS for actions the user's company SHOULD take - they are NOT real products or announcements
+- If the user asks about a recommendation (e.g., "Tesla Lite", "affordable model", etc.), explain HOW to implement it, don't search for it as if it exists
+- Distinguish between: (1) Real competitor moves/products to research online, (2) Recommendations that are strategic suggestions
+
+QUESTION INTERPRETATION:
+- If user asks "what should we do first" or "first thing" or "priority" or "most important action" - they want the TOP PRIORITY RECOMMENDATION from the Strategic Recommendations section, NOT information about the first competitor
+- If user asks about a specific competitor by name, provide info about that competitor
+- If user asks "what", "how", "why" about a strategy/recommendation - provide implementation guidance
+- "First", "most important", "priority", "start with" = asking for prioritized recommendations, NOT the first competitor in the list
 
 Rules for response (STRICT - MUST FOLLOW):
 1. NEVER output "Thought:", "Thinking:", chain-of-thought, or any internal reasoning. Start directly with the answer.
-2. Provide a one-line top summary (1 sentence) followed by up to 3 short bullets if needed.
-3. Do NOT use phrases like: "according to", "based on", "the data shows", "the context states", or any meta-commentary about sources, process, or how you arrived at the answer.
-4. Use present-tense, declarative statements. Keep each bullet under ~18 words.
-5. If the answer requires numbers or metrics, present only the most essential figures (no long tables).
-6. If information is not available locally, run online checks and then answer; if still missing, reply: "Information not available."
+2. If the question is about a RECOMMENDATION from the analysis, provide implementation guidance, feasibility assessment, or elaboration on the strategy - do NOT search for it as news.
+3. If the question is about REAL competitor actions or market data, use web search to find current information.
+4. When asked about "first thing to do" or "priority" - extract and explain the MOST IMPORTANT strategic recommendation, not competitor details.
+5. Provide a one-line top summary (1 sentence) followed by up to 5 short bullets if needed.
+6. Do NOT use phrases like: "according to", "based on", "the data shows", "the context states", or any meta-commentary.
+7. Use present-tense, declarative statements.
 
-Format: 1-line summary + up to 3 bullets. Total answer should be short — suitable for a CEO to read in 10 seconds.
+Format: 1-line summary + supporting bullets. Keep it concise but complete.
 
 IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thought:", no explanation of your reasoning process.""",
-                expected_output="Very short, direct answer (1 line + up to 3 bullets). NO 'Thought:' or reasoning shown.",
+                expected_output="Direct answer that understands the difference between recommendations (suggestions) and real news/products. NO 'Thought:' or reasoning shown.",
                 agent=agent
           )
 
@@ -229,6 +242,9 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
     def identify_competitors_task(self, agent, company_name):
         return Task(
             description=f"""Identify the top 3 direct competitors of {company_name} and explain WHY each is a competitor.
+
+            IMPORTANT: Use the web search tool to find current 2024/2025 competitive landscape data.
+            Search for "{company_name} competitors 2024" or "{company_name} competitive analysis 2025".
 
             Research and identify the 3 biggest direct competitors based on:
             1. Industry overlap and market segment
@@ -270,6 +286,11 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
             return Task(
                 description=f"""Produce a concise, executive-ready competitor analysis for {competitor_company} vs {user_company}.
 
+    IMPORTANT: You MUST use the web search tool to get CURRENT 2024/2025 data. Do NOT rely on training data.
+    - Search for "{competitor_company} Q3 2024 earnings" or "{competitor_company} 2024 annual report" for financials
+    - Search for "{competitor_company} news December 2025" or "{competitor_company} latest news" for recent moves
+    - The current date is December 2025 - all data should be from 2024 or 2025, NOT 2023 or earlier
+
     STRICT OUTPUT RULES (MUST FOLLOW):
     1. Output MUST start with a single line beginning with exactly: `TopLine:` (first non-empty line).
     2. Use ONLY the following Markdown sections in this order. Do NOT add, remove, or rename headings:
@@ -285,10 +306,10 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
        - Recent Moves: up to 6 bullets
        - Major Markets: 3-6 items
        - Hero Products: up to 3 short lines
-       - Financial Snapshot: up to 5 short metric lines
+       - Financial Snapshot: up to 5 short metric lines (use FY2024 or latest available - NOT 2023)
        - Direct Threats: up to 6 bullets
        - Strategic Recommendations: 4-6 actionable recommendations
-    5. If information unavailable, use exact phrases: `Not available` (for metrics) or `No recent public news (last 6 weeks)` (for Recent Moves).
+    5. If current 2024/2025 information unavailable after searching, use exact phrases: `Not available` (for metrics) or `No recent public news (last 6 weeks)` (for Recent Moves).
     6. Do not include source citations, URLs, or parenthetical provenance. Do not include JSON or wrappers — plain Markdown only.
     7. Output nothing else. If you cannot produce the required sections, respond with exactly: `Information not available`.
 
@@ -298,14 +319,11 @@ IMPORTANT: Your response should be ONLY the final answer. No preamble, no "Thoug
     - Focus on: defensive moves, offensive opportunities, areas to invest, partnerships to consider
     - Format as: "**Action:** [Brief description of what to do and why]"
 
-    Notes for the agent:
-    1. Use the knowledge graph and stored analysis first, then perform online checks (news and filings) to update Recent Moves.
-    2. Restrict Recent Moves to the last ~6 weeks only.
-    3. When citing financials, prefer official filings (10-K/10-Q) or company releases; if exact figures are not found, use `Not available`.
+    CRITICAL: Use web search tool FIRST before answering. Do NOT use 2023 data - search for 2024/2025 figures.
 
     User's Company: {user_company}
     Competitor: {competitor_company}""",
-                expected_output="Markdown with the exact required headings (TopLine, Recent Moves, Major Markets, Hero Products, Financial Snapshot, Direct Threats, Strategic Recommendations) and concise bullets.",
+                expected_output="Markdown with the exact required headings (TopLine, Recent Moves, Major Markets, Hero Products, Financial Snapshot, Direct Threats, Strategic Recommendations) and concise bullets. All financial data must be from 2024 or latest available.",
                 agent=agent
             )
 

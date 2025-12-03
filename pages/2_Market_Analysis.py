@@ -421,6 +421,12 @@ with main_col:
                     st.rerun()
     else:
         st.title("🎯 Competitive Intelligence")
+        
+        # Display the user's company name prominently at the top
+        user_company = session.get("user_company", "")
+        if user_company:
+            st.markdown(f"### 🏢 Analyzing: **{user_company}**")
+            st.markdown("---")
 
         analysis_tab, competitor_tab = st.tabs(["📊 Competitor Identification", "🔍 Detailed Analysis"])
 
@@ -845,6 +851,23 @@ with chat_col:
 === RECENT CHAT CONTEXT ===
 {chat_context}"""
                     
+                    # Determine if this is a question about recommendations vs real market data
+                    # Recommendation questions typically ask "how to", "what steps", "implement", etc.
+                    recommendation_keywords = ['how to', 'how can', 'how should', 'what steps', 'implement', 'strategy for', 'approach to', 'ways to', 'plan for', 'recommendation', 'expand', 'enhance', 'improve', 'develop', 'create', 'build', 'launch', 'establish']
+                    
+                    # Also detect follow-up questions asking for more detail/elaboration
+                    followup_keywords = ['more detail', 'elaborate', 'explain more', 'tell me more', 'go deeper', 'more specific', 'break down', 'detailed answer', 'more information', 'expand on', 'clarify', 'what exactly', 'specifically', 'give me more', 'provide more', 'deeper', 'further']
+                    
+                    # Detect priority/action questions that want recommendations, not competitor info
+                    priority_keywords = ['first thing', 'should we do', 'priority', 'most important', 'start with', 'begin with', 'top action', 'key action', 'what now', 'next step', 'what action', 'should i do', 'should we focus']
+                    
+                    is_recommendation_question = any(keyword in prompt.lower() for keyword in recommendation_keywords)
+                    is_followup_question = any(keyword in prompt.lower() for keyword in followup_keywords)
+                    is_priority_question = any(keyword in prompt.lower() for keyword in priority_keywords)
+                    
+                    # Skip online research for recommendation, follow-up, and priority questions
+                    skip_online_research = is_recommendation_question or is_followup_question or is_priority_question
+                    
                     main_task = financial_tasks.financial_chat_response_task(
                         agent=primary_agent,
                         user_question=prompt,
@@ -852,14 +875,16 @@ with chat_col:
                     )
                     tasks.append(main_task)
                     
-                    # Add online research task to gather additional information
-                    online_task = financial_tasks.online_research_task(
-                        agent=online_agent,
-                        query=prompt,
-                        company_name=session.get("user_company", ""),
-                        context=chat_context
-                    )
-                    tasks.append(online_task)
+                    # Only add online research task if NOT asking about a recommendation or follow-up
+                    # For recommendation/elaboration questions, we want strategic guidance, not news
+                    if not skip_online_research:
+                        online_task = financial_tasks.online_research_task(
+                            agent=online_agent,
+                            query=prompt,
+                            company_name=session.get("user_company", ""),
+                            context=chat_context
+                        )
+                        tasks.append(online_task)
                     
                     # Get metrics from knowledge graph for additional context
                     kg = memory.get_knowledge_graph()

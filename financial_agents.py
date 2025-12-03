@@ -1,5 +1,6 @@
 import os
 from crewai import Agent, LLM
+from crewai_tools import SerperDevTool
 from dotenv import load_dotenv
 import streamlit as st
 
@@ -26,6 +27,15 @@ def get_api_key(key_name):
 # Get API keys
 gemini_api_key = get_api_key("GEMINI_API_KEY")
 groq_api_key = get_api_key("GROQ_API_KEY")
+serper_api_key = get_api_key("SERPER_API_KEY")
+
+# Initialize search tool if Serper API key is available
+search_tool = None
+if serper_api_key:
+    os.environ["SERPER_API_KEY"] = serper_api_key  # Ensure it's in env for the tool
+    search_tool = SerperDevTool()
+else:
+    print("Warning: SERPER_API_KEY not found. Web search will be disabled - agents will use training data only.")
 
 # Validate keys - we need at least Gemini for the main agents
 if not gemini_api_key:
@@ -174,6 +184,7 @@ class FinancialAgents:
                 "identify the top 3-5 direct competitors of any company based on industry, "
                 "market share, product overlap, and strategic positioning."
             ),
+            tools=[search_tool] if search_tool else [],
             llm=gemini_llm,
             verbose=False,
             allow_delegation=False
@@ -189,6 +200,7 @@ class FinancialAgents:
                 "and potential competitive threats. You provide comprehensive financial comparisons "
                 "and actionable competitive insights that help companies understand their competitive landscape."
             ),
+            tools=[search_tool] if search_tool else [],
             llm=gemini_llm,
             verbose=False,
             allow_delegation=False
@@ -220,7 +232,8 @@ class FinancialAgents:
                 "information to ensure accuracy and relevance. You always aim to provide the most up-to-date "
                 "and reliable market insights. Your fast processing of web data helps provide quick, accurate insights."
             ),
-            llm=gemini_llm,  # Using Groq for faster web search processing
+            tools=[search_tool] if search_tool else [],
+            llm=gemini_llm,
             verbose=False,
             allow_delegation=False
         )
