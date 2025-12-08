@@ -1,0 +1,122 @@
+{
+  "summary": {
+    "total_evaluations": 3,
+    "baseline_wins": 3,
+    "agentic_wins": 0,
+    "ties": 0,
+    "agentic_win_rate": 0.0
+  },
+  "average_scores": {
+    "baseline": {
+      "accuracy": 5.0,
+      "completeness": 3.0,
+      "actionability": 2.67,
+      "recency": 2.67,
+      "structure": 5.0
+    },
+    "agentic": {
+      "accuracy": 4.0,
+      "completeness": 2.0,
+      "actionability": 2.33,
+      "recency": 1.67,
+      "structure": 4.0
+    }
+  },
+  "by_test_type": {
+    "competitor_identification": {
+      "baseline": 1,
+      "agentic": 0,
+      "tie": 0
+    },
+    "competitive_intelligence": {
+      "baseline": 1,
+      "agentic": 0,
+      "tie": 0
+    },
+    "financial_analysis": {
+      "baseline": 1,
+      "agentic": 0,
+      "tie": 0
+    }
+  },
+  "individual_results": [
+    {
+      "test_case_id": "comp_id_001",
+      "test_case_type": "competitor_identification",
+      "input_query": "Identify the top 3 direct competitors of Apple",
+      "baseline_scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "actionability": 2,
+        "recency": 2,
+        "structure": 5,
+        "total": 17,
+        "average": 3.4
+      },
+      "agentic_scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "actionability": 1,
+        "recency": 2,
+        "structure": 4,
+        "total": 13,
+        "average": 2.6
+      },
+      "winner": "baseline",
+      "judge_rationale": "Response A is significantly more detailed and analytical, providing a much richer understanding of Apple's competitors by thoroughly outlining market overlap and specific threats. While both responses struggled with providing actionable recommendations and citing specific recent events (past 6 weeks data), Response A's superior depth within the sections it did address, coupled with its excellent structural organization, makes it the clear winner.",
+      "evaluation_timestamp": "2025-12-07T16:14:39.913437"
+    },
+    {
+      "test_case_id": "comp_intel_001",
+      "test_case_type": "competitive_intelligence",
+      "input_query": "Provide competitive intelligence on Samsung from Apple's perspective",
+      "baseline_scores": {
+        "accuracy": 5,
+        "completeness": 5,
+        "actionability": 5,
+        "recency": 5,
+        "structure": 5,
+        "total": 25,
+        "average": 5.0
+      },
+      "agentic_scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "actionability": 5,
+        "recency": 2,
+        "structure": 4,
+        "total": 17,
+        "average": 3.4
+      },
+      "winner": "baseline",
+      "judge_rationale": "Response A is the clear winner due to its superior recency and temporal accuracy, providing plausible and timely insights for December 2025 across all sections, whereas Response B heavily relied on outdated 2024 data for key competitive analysis points and included a factual error regarding CES timing. Response A's comprehensive detail and realistic projections made it a much more effective competitive intelligence report.",
+      "evaluation_timestamp": "2025-12-07T16:16:24.418972"
+    },
+    {
+      "test_case_id": "fin_analysis_001",
+      "test_case_type": "financial_analysis",
+      "input_query": "Analyze this financial document and extract key insights",
+      "baseline_scores": {
+        "accuracy": 5,
+        "completeness": 1,
+        "actionability": 1,
+        "recency": 1,
+        "structure": 5,
+        "total": 13,
+        "average": 2.6
+      },
+      "agentic_scores": {
+        "accuracy": 5,
+        "completeness": 1,
+        "actionability": 1,
+        "recency": 1,
+        "structure": 4,
+        "total": 12,
+        "average": 2.4
+      },
+      "winner": "baseline",
+      "judge_rationale": "Both responses provided a comprehensive and accurate financial analysis for Fiscal Year 2024. However, both fundamentally failed to address the requirements of a competitive intelligence query, missing key sections like 'Recent Moves' and 'Direct Threats', and offering no actionable competitive strategy recommendations. Their reliance on FY2024 data also made them severely outdated for the specified 'past 6 weeks' recency requirement. Response A is marginally superior due to a more organized and comprehensive presentation of financial ratios.",
+      "evaluation_timestamp": "2025-12-07T16:17:42.679986"
+    }
+  ]
+}

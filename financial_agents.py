@@ -92,12 +92,14 @@ class FinancialAgents:
     def company_research_agent(self):
         return Agent(
             role='Company Research Specialist',
-            goal="Research and analyze companies by name, providing comprehensive financial and business insights.",
+            goal="Research and analyze companies by name, providing comprehensive financial and business insights with current market data.",
             backstory=(
                 "You are a seasoned equity research analyst who specializes in fundamental company analysis. "
                 "You can provide detailed insights about a company's business model, financial performance, "
-                "competitive position, management quality, and investment prospects."
+                "competitive position, management quality, and investment prospects. "
+                "You always search for the most recent news and data to provide up-to-date insights."
             ),
+            tools=[search_tool] if search_tool else [],
             llm=gemini_llm,
             verbose=False,
             allow_delegation=False

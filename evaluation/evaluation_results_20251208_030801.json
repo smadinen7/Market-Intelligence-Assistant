@@ -1,0 +1,153 @@
+{
+  "summary": {
+    "total_evaluations": 4,
+    "detailed_wins": 1,
+    "agentic_wins": 3,
+    "ties": 0,
+    "agentic_win_rate": 75.0
+  },
+  "average_scores": {
+    "detailed": {
+      "accuracy": 4.25,
+      "completeness": 3.5,
+      "actionability": 3.25,
+      "recency": 3.25,
+      "structure": 3.75
+    },
+    "agentic": {
+      "accuracy": 4.75,
+      "completeness": 4.75,
+      "actionability": 4.75,
+      "recency": 4.0,
+      "structure": 5.0
+    }
+  },
+  "by_test_type": {
+    "competitor_identification": {
+      "detailed": 1,
+      "agentic": 0,
+      "tie": 0
+    },
+    "competitive_intelligence": {
+      "detailed": 0,
+      "agentic": 1,
+      "tie": 0
+    },
+    "financial_analysis": {
+      "detailed": 0,
+      "agentic": 1,
+      "tie": 0
+    },
+    "chat_question": {
+      "detailed": 0,
+      "agentic": 1,
+      "tie": 0
+    }
+  },
+  "individual_results": [
+    {
+      "test_case_id": "comp_id_001",
+      "test_case_type": "competitor_identification",
+      "input_query": "Identify the top 3 direct competitors of Apple",
+      "baseline_scores": {
+        "accuracy": 5,
+        "completeness": 5,
+        "actionability": 4,
+        "recency": 4,
+        "structure": 5,
+        "total": 23,
+        "average": 4.6
+      },
+      "agentic_scores": {
+        "accuracy": 5,
+        "completeness": 4,
+        "actionability": 4,
+        "recency": 4,
+        "structure": 5,
+        "total": 22,
+        "average": 4.4
+      },
+      "winner": "baseline",
+      "judge_rationale": "Response B is chosen as the winner due to its higher completeness score, providing more detailed information about each competitor, including specific product overlaps and reasons why they are competitive threats. This additional detail enhances the overall quality of the response, making it more useful for competitive intelligence purposes.",
+      "evaluation_timestamp": "2025-12-08T03:08:26.136202"
+    },
+    {
+      "test_case_id": "comp_intel_001",
+      "test_case_type": "competitive_intelligence",
+      "input_query": "Provide competitive intelligence on Samsung from Apple's perspective",
+      "baseline_scores": {
+        "accuracy": 4,
+        "completeness": 4,
+        "actionability": 4,
+        "recency": 4,
+        "structure": 4,
+        "total": 20,
+        "average": 4.0
+      },
+      "agentic_scores": {
+        "accuracy": 5,
+        "completeness": 5,
+        "actionability": 5,
+        "recency": 5,
+        "structure": 5,
+        "total": 25,
+        "average": 5.0
+      },
+      "winner": "agentic",
+      "judge_rationale": "Response A is chosen as the winner due to its higher scores across all dimensions, particularly in accuracy, completeness, and actionability, demonstrating a more comprehensive and detailed competitive intelligence report on Samsung from Apple's perspective. Response A provides specific, recent examples and data, along with clear strategic recommendations, surpassing Response B in overall quality and usefulness.",
+      "evaluation_timestamp": "2025-12-08T03:10:04.866790"
+    },
+    {
+      "test_case_id": "fin_analysis_001",
+      "test_case_type": "financial_analysis",
+      "input_query": "Analyze this financial document and extract key insights",
+      "baseline_scores": {
+        "accuracy": 5,
+        "completeness": 4,
+        "actionability": 4,
+        "recency": 4,
+        "structure": 5,
+        "total": 22,
+        "average": 4.4
+      },
+      "agentic_scores": {
+        "accuracy": 5,
+        "completeness": 5,
+        "actionability": 5,
+        "recency": 4,
+        "structure": 5,
+        "total": 24,
+        "average": 4.8
+      },
+      "winner": "agentic",
+      "judge_rationale": "Response A is chosen as the winner due to its higher completeness score, as it provides a more detailed analysis with specific numbers and ratios, and its actionability score, offering concrete recommendations for further investigation. Response A's structure is also more comprehensive, making it easier to follow and understand.",
+      "evaluation_timestamp": "2025-12-08T03:11:14.184383"
+    },
+    {
+      "test_case_id": "chat_001",
+      "test_case_type": "chat_question",
+      "input_query": "What should we do first?",
+      "baseline_scores": {
+        "accuracy": 3,
+        "completeness": 1,
+        "actionability": 1,
+        "recency": 1,
+        "structure": 1,
+        "total": 7,
+        "average": 1.4
+      },
+      "agentic_scores": {
+        "accuracy": 4,
+        "completeness": 5,
+        "actionability": 5,
+        "recency": 3,
+        "structure": 5,
+        "total": 22,
+        "average": 4.4
+      },
+      "winner": "agentic",
+      "judge_rationale": "Response A is the clear winner due to its comprehensive detail, specific actionable recommendations, and well-structured format, whereas Response B lacks completeness, actionability, and structure. Response A provides a detailed roadmap for accelerating foldable iPhone development, making it a more useful response for competitive intelligence. The significant difference in completeness and actionability between the two responses solidifies Response A as the superior choice.",
+      "evaluation_timestamp": "2025-12-08T03:11:51.342352"
+    }
+  ]
+}
