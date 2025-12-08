@@ -348,7 +348,9 @@ Your response must be ONLY the final answer with no preamble or reasoning.""",
 Strategic Recommendations:
 {strategic_recommendations}
 
-Provide a CONCISE regulatory summary in this format:
+IMPORTANT: Output ONLY the formatted regulatory summary below. Do NOT include any reasoning, thoughts, planning, or process notes.
+
+Provide a CONCISE regulatory summary in this EXACT format:
 
 ## Regulatory & Compliance Concerns
 
@@ -364,8 +366,9 @@ Provide a CONCISE regulatory summary in this format:
 - Note any major export controls, data localization, or trade restrictions
 - State "None identified" if not applicable
 
-Keep each section to 2-4 concise bullet points. Focus on ACTIONABLE, HIGH-IMPACT concerns only.""",
-            expected_output="Concise Markdown regulatory summary with 3 sections, focusing on top 2-3 concerns per section.",
+Keep each section to 2-4 concise bullet points. Focus on ACTIONABLE, HIGH-IMPACT concerns only.
+Output MUST start with "## Regulatory & Compliance Concerns" - nothing before it.""",
+            expected_output="Concise Markdown regulatory summary with 3 sections, focusing on top 2-3 concerns per section. Must start with heading, no preamble or reasoning.",
             agent=agent
         )
 

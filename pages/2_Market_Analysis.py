@@ -751,6 +751,37 @@ Analysis State: Starting competitive intelligence analysis""")
                         regulatory_analysis = regulatory_crew.kickoff()
                         if regulatory_analysis and regulatory_analysis.raw:
                             regulatory_analysis = regulatory_analysis.raw
+                            
+                            # Clean up any agent thinking/reasoning text that leaked into output
+                            # Remove everything before the first markdown heading
+                            if "##" in regulatory_analysis:
+                                # Find the first ## heading
+                                first_heading_idx = regulatory_analysis.find("##")
+                                regulatory_analysis = regulatory_analysis[first_heading_idx:]
+                            
+                            # Remove any lines that start with "Thought:" or contain agent reasoning
+                            lines = regulatory_analysis.split('\n')
+                            cleaned_lines = []
+                            skip_mode = False
+                            
+                            for line in lines:
+                                # Skip lines that are agent thoughts/reasoning
+                                if line.strip().startswith("Thought:") or \
+                                   line.strip().startswith("Action:") or \
+                                   line.strip().startswith("Using Tool:") or \
+                                   line.strip().startswith("Tool Input:") or \
+                                   line.strip().startswith("Observation:"):
+                                    skip_mode = True
+                                    continue
+                                
+                                # Exit skip mode when we hit a markdown heading
+                                if line.strip().startswith("##"):
+                                    skip_mode = False
+                                
+                                if not skip_mode:
+                                    cleaned_lines.append(line)
+                            
+                            regulatory_analysis = '\n'.join(cleaned_lines)
                         else:
                             regulatory_analysis = "## Regulatory & Compliance Concerns\n\nNo significant regulatory concerns identified at this time."
                         
