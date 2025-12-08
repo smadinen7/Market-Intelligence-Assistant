@@ -324,13 +324,13 @@ Your response must be ONLY the final answer with no preamble or reasoning.""",
     - Each recommendation must be a specific, actionable item {user_company} can implement
     - Base recommendations on {competitor_company}'s recent moves and strengths
     - Focus on: defensive moves, offensive opportunities, areas to invest, partnerships to consider
-    - Include priority level: **[HIGH/MEDIUM/LOW PRIORITY]** before each recommendation
     - Format EACH recommendation as a bullet with this EXACT structure:
-      * **[PRIORITY]** Brief title
-        
-        **Action:** What to do and how to do it
-        
-        **Impact:** Expected business impact and benefits
+      * **Brief title** **[HIGH PRIORITY]** or **[MEDIUM PRIORITY]** or **[LOW PRIORITY]**
+      
+      **Action:** What to do and how to do it
+      
+      **Impact:** Expected business impact and benefits
+    - IMPORTANT: Put title first, then priority level in brackets. Put Action and Impact on separate lines
 
     CRITICAL: Use web search tool FIRST before answering. Do NOT use 2023 data - search for 2024/2025 figures.
     IMPORTANT: Be thorough and detailed. Executives want comprehensive intelligence, not just summaries.
@@ -340,6 +340,34 @@ Your response must be ONLY the final answer with no preamble or reasoning.""",
                 expected_output="Detailed Markdown with the exact required headings (TopLine, Recent Moves, Major Markets, Hero Products, Financial Snapshot, Direct Threats, Strategic Recommendations) and comprehensive bullets with specific facts. All financial data must be from 2024 or latest available.",
                 agent=agent
             )
+
+    def regulatory_concerns_task(self, agent, user_company, competitor_company, strategic_recommendations, industry_context):
+        return Task(
+            description=f"""Quickly identify TOP 3 regulatory concerns for {user_company} in the {industry_context}.
+
+Strategic Recommendations:
+{strategic_recommendations}
+
+Provide a CONCISE regulatory summary in this format:
+
+## Regulatory & Compliance Concerns
+
+### Key Industry Regulations
+- List 2-3 most critical regulations (e.g., antitrust, data privacy, sector rules)
+- Mention relevant regulatory bodies (FTC, SEC, FDA, etc.)
+
+### Top Compliance Risks
+- Identify 2-3 main regulatory risks from the strategic recommendations
+- Format: **Risk** | **Severity** (HIGH/MEDIUM/LOW) | **Quick Mitigation**
+
+### Cross-Border Considerations
+- Note any major export controls, data localization, or trade restrictions
+- State "None identified" if not applicable
+
+Keep each section to 2-4 concise bullet points. Focus on ACTIONABLE, HIGH-IMPACT concerns only.""",
+            expected_output="Concise Markdown regulatory summary with 3 sections, focusing on top 2-3 concerns per section.",
+            agent=agent
+        )
 
     def knowledge_graph_query_task(self, agent, query, graph_context):
         return Task(

@@ -336,6 +336,45 @@ def sanitize_competitor_output(text: str) -> str:
         return parts[1].strip()
     return text.strip()
 
+
+def format_strategic_recommendations(text: str) -> str:
+    """Format strategic recommendations with color-coded priorities and proper line breaks."""
+    import re
+    
+    if not text:
+        return text
+    
+    # Define color mappings for priorities
+    priority_colors = {
+        'HIGH': '#FF4B4B',      # Red
+        'MEDIUM': '#FFA500',    # Orange
+        'LOW': '#00CC88'        # Green
+    }
+    
+    # Pattern to match priority tags (with or without PRIORITY word)
+    priority_pattern = r'\*\*\[(?P<priority>HIGH|MEDIUM|LOW)(?:\s+PRIORITY)?\]\*\*'
+    
+    # Replace priority tags with colored badges (without the word PRIORITY)
+    def replace_priority(match):
+        priority = match.group('priority')
+        color = priority_colors.get(priority, '#666666')
+        return f'<span style="background-color: {color}; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">{priority}</span>'
+    
+    text = re.sub(priority_pattern, replace_priority, text)
+    
+    # Format Action and Impact on separate lines
+    # Pattern: **Action:** text **Impact:** text
+    action_impact_pattern = r'\*\*Action:\*\*\s*(.*?)\s*\*\*Impact:\*\*\s*(.*?)(?=\n\*|\n\n|$)'
+    
+    def replace_action_impact(match):
+        action = match.group(1).strip()
+        impact = match.group(2).strip()
+        return f'\n\n**Action:**  \n{action}\n\n**Impact:**  \n{impact}'
+    
+    text = re.sub(action_impact_pattern, replace_action_impact, text, flags=re.DOTALL)
+    
+    return text
+
 # --- AGENT & TASK DEFINITIONS ---
 financial_agents = FinancialAgents()
 financial_tasks = FinancialTasks()
@@ -484,7 +523,11 @@ with main_col:
             # Display conversation messages
             for message in session.get("messages", []):
                 with st.chat_message(message["role"]):
-                    st.markdown(escape_dollars_for_markdown(message["content"]))
+                    content = message["content"]
+                    # Format strategic recommendations with color-coded priorities
+                    if "## Strategic Recommendations" in content:
+                        content = format_strategic_recommendations(content)
+                    st.markdown(escape_dollars_for_markdown(content), unsafe_allow_html=True)
 
             # State 1: Awaiting user's company
             if state == "awaiting_user_company":
@@ -671,22 +714,66 @@ Analysis State: Starting competitive intelligence analysis""")
                         
                         competitive_analysis = competitive_analysis.raw
                         debug_container.code(f"Analysis successful. Response length: {len(competitive_analysis)}")
-                        progress_container.progress(0.35)
+                        progress_container.progress(0.3)
                         
-                        # Step 2: Extract entities and populate knowledge graph
-                        status_container.info("🔍 Step 2/3: Extracting key information...")
+                        # Step 2: Regulatory Analysis
+                        status_container.info("⚖️ Step 2/4: Analyzing regulatory concerns...")
+                        
+                        # Extract strategic recommendations from competitive analysis
+                        strategic_recs = ""
+                        if "## Strategic Recommendations" in competitive_analysis:
+                            recs_section = competitive_analysis.split("## Strategic Recommendations")[1]
+                            # Get just the recommendations section (stop at next ## heading or end)
+                            if "\n##" in recs_section:
+                                strategic_recs = recs_section.split("\n##")[0]
+                            else:
+                                strategic_recs = recs_section
+                        
+                        # Determine industry context from the companies
+                        industry_context = f"{selected_competitor} and {session['user_company']} industry"
+                        
+                        regulatory_agent = financial_agents.regulatory_analyst_agent()
+                        regulatory_task = financial_tasks.regulatory_concerns_task(
+                            regulatory_agent,
+                            session["user_company"],
+                            selected_competitor,
+                            strategic_recs if strategic_recs else "No strategic recommendations available",
+                            industry_context
+                        )
+                        
+                        regulatory_crew = Crew(
+                            agents=[regulatory_agent],
+                            tasks=[regulatory_task],
+                            process=Process.sequential,
+                            verbose=False
+                        )
+                        
+                        regulatory_analysis = regulatory_crew.kickoff()
+                        if regulatory_analysis and regulatory_analysis.raw:
+                            regulatory_analysis = regulatory_analysis.raw
+                        else:
+                            regulatory_analysis = "## Regulatory & Compliance Concerns\n\nNo significant regulatory concerns identified at this time."
+                        
+                        debug_container.code(f"Regulatory analysis completed. Length: {len(regulatory_analysis)}")
+                        progress_container.progress(0.45)
+                        
+                        # Combine competitive analysis with regulatory section
+                        combined_analysis = competitive_analysis + "\n\n" + regulatory_analysis
+                        
+                        # Step 3: Extract entities and populate knowledge graph
+                        status_container.info("🔍 Step 3/4: Extracting key information...")
                         
                         # Break analysis into smaller chunks for better reliability
                         chunk_size = 2000
-                        chunks = [competitive_analysis[i:i + chunk_size] for i in range(0, len(competitive_analysis), chunk_size)]
+                        chunks = [combined_analysis[i:i + chunk_size] for i in range(0, len(combined_analysis), chunk_size)]
                         all_entities = []
                         
                         # Calculate progress step for each chunk
-                        chunk_progress_step = 0.4 / len(chunks)
-                        current_progress = 0.35
+                        chunk_progress_step = 0.35 / len(chunks)
+                        current_progress = 0.45
                         
                         for i, chunk in enumerate(chunks, 1):
-                            status_container.info(f"🔍 Step 2/3: Processing chunk {i} of {len(chunks)}...")
+                            status_container.info(f"🔍 Step 3/4: Processing chunk {i} of {len(chunks)}...")
                             extraction_agent = financial_agents.knowledge_graph_analyst_agent()
                             extraction_task = financial_tasks.entity_extraction_task(
                                 extraction_agent,
@@ -707,9 +794,9 @@ Analysis State: Starting competitive intelligence analysis""")
                             current_progress += chunk_progress_step
                             progress_container.progress(current_progress)
                         
-                        # Step 3: Knowledge Graph Updates
-                        status_container.info("🌐 Step 3/3: Building knowledge graph...")
-                        progress_container.progress(0.8)
+                        # Step 4: Knowledge Graph Updates
+                        status_container.info("🌐 Step 4/4: Building knowledge graph...")
+                        progress_container.progress(0.85)
                         
                         extracted_entities = "\n".join(all_entities)
                         if not extracted_entities:
@@ -725,8 +812,8 @@ Analysis State: Starting competitive intelligence analysis""")
                         
                         progress_container.progress(0.9)
                         
-                        # Update session and memory
-                        raw_analysis = competitive_analysis
+                        # Update session and memory (use combined_analysis which includes regulatory section)
+                        raw_analysis = combined_analysis
                         # Sanitize display output to remove any leading planner/meta-text and
                         # ensure the UI shows only the formal analysis sections.
                         sanitized = sanitize_competitor_output(raw_analysis) or raw_analysis

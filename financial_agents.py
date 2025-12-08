@@ -206,6 +206,24 @@ class FinancialAgents:
             allow_delegation=False
         )
 
+    def regulatory_analyst_agent(self):
+        return Agent(
+            role='Regulatory & Compliance Analyst',
+            goal="Identify regulatory concerns, compliance risks, and legal challenges related to strategic recommendations and industry operations.",
+            backstory=(
+                "You are a regulatory and compliance expert with deep knowledge of international business law, "
+                "antitrust regulations, data privacy laws (GDPR, CCPA), sector-specific regulations (FDA, FCC, financial services), "
+                "and cross-border trade compliance. You specialize in identifying potential regulatory hurdles, "
+                "compliance risks, and legal challenges that companies may face when executing strategic initiatives. "
+                "You stay current on regulatory trends, government scrutiny areas, and emerging compliance requirements "
+                "across different industries and jurisdictions."
+            ),
+            tools=[search_tool] if search_tool else [],
+            llm=gemini_llm,
+            verbose=False,
+            allow_delegation=False
+        )
+
     def knowledge_graph_analyst_agent(self):
         return Agent(
             role='Knowledge Graph Analyst',
