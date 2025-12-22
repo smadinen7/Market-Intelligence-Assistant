@@ -4,11 +4,31 @@ Welcome to the **Market Intelligence Assistant**, your AI-powered platform for c
 
 ---
 
+## � Table of Contents
+
+1. [Getting Started](#-getting-started)
+2. [Market Analysis Module](#-market-analysis)
+3. [Internal Analysis Module](#-internal-analysis)
+4. [Tips for Best Results](#-tips-for-best-results)
+5. [Understanding Recommendations](#-understanding-strategic-recommendations)
+6. [Chat Best Practices](#-chat-best-practices)
+7. [FAQ](#-frequently-asked-questions)
+8. [Technical Documentation](#-technical-documentation)
+
+---
+
 ## 🚀 Getting Started
 
 ### Accessing the Platform
-1. Open your web browser and navigate to the application URL
-2. You'll see the home page with navigation options in the sidebar
+
+**Local Development:**
+1. Navigate to the project directory
+2. Run `streamlit run Home.py`
+3. Open `http://localhost:8501` in your browser
+
+**Streamlit Cloud:**
+1. Access your deployed app URL (e.g., `https://your-app.streamlit.app`)
+2. See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment instructions
 
 ### Two Main Modules
 - **📈 Market Analysis** - Competitive intelligence and market research
@@ -163,6 +183,33 @@ If you encounter any issues or have questions:
 - Check that you've entered a valid company name
 - Try refreshing the page if an analysis seems stuck
 - Start a new analysis session if you experience unexpected behavior
+
+---
+
+## 📚 Technical Documentation
+
+For technical setup and customization, refer to:
+
+| Document | Purpose |
+|----------|---------|
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Deploy to Streamlit Cloud with API keys |
+| [LLM_CONFIGURATION.md](LLM_CONFIGURATION.md) | Change LLM providers (Gemini → OpenAI, etc.) |
+| [SCALABILITY_GUIDE.md](SCALABILITY_GUIDE.md) | Add new agents, features, and extend functionality |
+| [README.md](README.md) | Project overview and local setup |
+
+---
+
+## 🔐 API Keys Required
+
+The application requires the following API keys:
+
+| Key | Purpose | Required |
+|-----|---------|----------|
+| `GEMINI_API_KEY` | Primary LLM (Gemini 2.5 Flash) | ✅ Yes |
+| `GROQ_API_KEY` | Secondary LLM (Llama 3 70B) | ⚠️ Optional |
+| `SERPER_API_KEY` | Real-time web search | ⚠️ Optional |
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions on obtaining and configuring these keys.
 
 ---
 

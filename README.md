@@ -1,4 +1,4 @@
-# 🤖 CEO AI Assistant: Market Intelligence Platform
+# 🤖 Market Intelligence Assistant
 
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-orange.svg)](https://streamlit.io)
@@ -6,6 +6,17 @@
 [![Gemini](https://img.shields.io/badge/LLM-Gemini%202.5%20Flash-purple.svg)](https://ai.google.dev/)
 
 An advanced AI-powered platform designed for executives, strategists, and analysts to gain deep insights into their competitive landscape and internal financial health. This tool leverages a crew of specialized AI agents with real-time web search capabilities to deliver up-to-date market intelligence and actionable strategic recommendations.
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [USER_GUIDE.md](USER_GUIDE.md) | How to use the application |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Deploy to Streamlit Cloud with API keys |
+| [LLM_CONFIGURATION.md](LLM_CONFIGURATION.md) | Change LLM providers (Gemini → OpenAI, Claude, etc.) |
+| [SCALABILITY_GUIDE.md](SCALABILITY_GUIDE.md) | Add new agents, features, and extend functionality |
 
 ---
 
@@ -68,9 +79,10 @@ This platform uses a sophisticated multi-agent AI architecture powered by CrewAI
 ### Prerequisites
 
 *   **Python 3.11+**
-*   **API Keys** for:
-    *   [Google AI Studio](https://aistudio.google.com/) (for Gemini 2.5 Flash)
-    *   [Serper](https://serper.dev/) (for web search)
+*   **API Keys** (see [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions):
+    *   [Google AI Studio](https://aistudio.google.com/apikey) - Gemini API (Required)
+    *   [Groq Console](https://console.groq.com/keys) - Llama 3 70B (Recommended)
+    *   [Serper](https://serper.dev/) - Web Search (Recommended)
 
 ### Installation
 
@@ -93,11 +105,19 @@ This platform uses a sophisticated multi-agent AI architecture powered by CrewAI
     ```
 
 4.  **Set up your environment variables:**
-    Create a `.env` file in the root directory:
+    Copy the example file and add your API keys:
+    ```sh
+    cp .env.example .env
+    ```
+    
+    Edit `.env` with your keys:
     ```env
-    GEMINI_API_KEY="your_google_api_key_here"
+    GEMINI_API_KEY="your_gemini_api_key_here"
+    GROQ_API_KEY="your_groq_api_key_here"
     SERPER_API_KEY="your_serper_api_key_here"
     ```
+    
+    See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions on obtaining API keys.
 
 ---
 
